@@ -18,6 +18,8 @@
         <version.java.compiler>11</version.java.compiler>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <equals.verifier.version>3.4.1</equals.verifier.version>
+        <so-core-version>1.7.1-SNAPSHOT</so-core-version>
     </properties>
 
     <build>
