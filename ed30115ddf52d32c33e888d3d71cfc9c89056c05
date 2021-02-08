@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34e5772e_10a76ced",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-handler/src/main/java/org/onap/so/monitoring/camunda/model/ActivityInstance.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-02-08T10:22:56Z",
+      "side": 1,
+      "message": "I think once we are happy with code and testing after migration, then we should rename the package names as well",
+      "range": {
+        "startLine": 20,
+        "startChar": 8,
+        "endLine": 20,
+        "endChar": 30
+      },
+      "revId": "ed30115ddf52d32c33e888d3d71cfc9c89056c05",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    }
+  ]
+}
