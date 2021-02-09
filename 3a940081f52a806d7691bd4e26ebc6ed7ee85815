@@ -22,6 +22,30 @@
       "revId": "3a940081f52a806d7691bd4e26ebc6ed7ee85815",
       "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c601b77_2434ae7f",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 6750
+      },
+      "writtenOn": "2021-02-09T12:17:23Z",
+      "side": 1,
+      "message": "Done, please refer https://gerrit.onap.org/r/c/so/so-admin-cockpit/+/117637/",
+      "parentUuid": "fced3d87_4b8c1edc",
+      "range": {
+        "startLine": 79,
+        "startChar": 69,
+        "endLine": 79,
+        "endChar": 85
+      },
+      "revId": "3a940081f52a806d7691bd4e26ebc6ed7ee85815",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
     }
   ]
 }
