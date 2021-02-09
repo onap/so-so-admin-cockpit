@@ -76,7 +76,7 @@
                             <outputDirectory>${project.basedir}/target/classes/static/</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.basedir}/../so-monitoring-ui/src/main/frontend/dist/ONAP-SO-Monitor/</directory>
+                                    <directory>${project.basedir}/../so-admin-cockpit-monitoring-workflow-ui/src/main/frontend/dist/ONAP-SO-Monitor/</directory>
                                 </resource>
                             </resources>
                         </configuration>
