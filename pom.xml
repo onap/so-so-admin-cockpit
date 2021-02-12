@@ -41,5 +41,6 @@
     </build>
     <modules>
         <module>so-admin-cockpit-monitoring-workflow</module>
+        <module>packages</module>
     </modules>
 </project>
