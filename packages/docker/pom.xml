@@ -73,7 +73,7 @@
                             </build>
                         </image>
                         <image>
-                            <name>${docker.image.prefix}/so-monitoring</name>
+                            <name>${docker.image.prefix}/so-admin-cockpit</name>
                             <build>
                                 <cleanup>try</cleanup>
                                 <dockerFile>docker-files/Dockerfile.so-app</dockerFile>
@@ -130,7 +130,7 @@
                             <goal>push</goal>
                         </goals>
                         <configuration>
-                            <image>${docker.image.prefix}/so-monitoring</image>
+                            <image>${docker.image.prefix}/so-admin-cockpit</image>
                         </configuration>
                     </execution>
                 </executions>
