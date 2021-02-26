@@ -1,0 +1,9 @@
+---
+distribution_type: 'container'
+container_release_tag: '1.8.1'
+project: 'so'
+log_dir: 'so-so-admin-cockpit-maven-docker-stage-master/17'
+ref: 'bc04fa7a110c844f84125cc3656b6442f9d397d1'
+containers:
+    - name: 'so/so-admin-cockpit'
+      version: '1.8.0-20210225T1448'
