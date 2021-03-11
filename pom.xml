@@ -19,6 +19,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <equals.verifier.version>3.4.1</equals.verifier.version>
         <so-core-version>1.8.0-SNAPSHOT</so-core-version>
+        <jersey-hk2-version>2.26</jersey-hk2-version>
     </properties>
 
     <build>
