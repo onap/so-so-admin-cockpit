@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c214d39a_8bc6454a",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/pom.xml",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-03-12T12:46:14Z",
+      "side": 1,
+      "message": "you may remove spring-boot-starter-data-jpa exclusion as well after removing jpa dependency from handler",
+      "revId": "3e6cf1344e035c946a56974b994b73c0bc89a40d",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d2d6bef_23f6c21c",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/pom.xml",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-03-12T12:46:14Z",
+      "side": 1,
+      "message": "remove common dependency as it is already added as part handler module",
+      "revId": "3e6cf1344e035c946a56974b994b73c0bc89a40d",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    }
+  ]
+}
