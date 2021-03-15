@@ -20,6 +20,8 @@
 
 package org.onap.so.monitoring.rest.api;
 
+import static org.slf4j.LoggerFactory.getLogger;
+import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -29,10 +31,11 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
  */
 @SpringBootApplication(scanBasePackages = {"org.onap"}, exclude = SecurityAutoConfiguration.class)
 public class SoMonitoringApplication {
+    private static final Logger logger = getLogger(SoMonitoringApplication.class);
 
     public static void main(String[] args) {
         SpringApplication.run(SoMonitoringApplication.class, args);
-
+        logger.info("SO Admin Cockpit Application started successfully!!");
     }
 
 }
