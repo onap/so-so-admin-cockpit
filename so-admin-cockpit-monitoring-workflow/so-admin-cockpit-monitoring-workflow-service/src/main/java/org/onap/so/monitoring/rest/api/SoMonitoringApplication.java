@@ -35,7 +35,7 @@ public class SoMonitoringApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(SoMonitoringApplication.class, args);
-        logger.info("SO Admin Cockpit Application started successfully!");
+        logger.info("SO Admin Cockpit Application started successfully!!");
     }
 
 }
