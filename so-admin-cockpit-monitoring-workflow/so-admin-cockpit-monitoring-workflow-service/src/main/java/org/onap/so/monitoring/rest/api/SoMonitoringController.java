@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -37,8 +40,14 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import net.minidev.json.JSONObject;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.onap.so.db.catalog.beans.ServiceRecipe;
+import org.onap.so.db.catalog.beans.NetworkRecipe;
+import org.onap.so.db.catalog.beans.VnfRecipe;
+import org.onap.so.db.catalog.beans.NetworkResource;
+import org.onap.so.db.catalog.beans.VnfResource;
 import org.onap.so.monitoring.db.service.DatabaseServiceProvider;
 import org.onap.so.monitoring.model.ActivityInstanceDetail;
 import org.onap.so.monitoring.model.ProcessDefinitionDetail;
@@ -47,6 +56,7 @@ import org.onap.so.monitoring.model.ProcessInstanceIdDetail;
 import org.onap.so.monitoring.model.ProcessInstanceVariableDetail;
 import org.onap.so.monitoring.model.SoInfraRequest;
 import org.onap.so.monitoring.rest.service.CamundaProcessDataServiceProvider;
+import org.onap.so.rest.catalog.beans.Service;
 import org.onap.so.rest.exceptions.InvalidRestRequestException;
 import org.onap.so.rest.exceptions.HttpResouceNotFoundException;
 import org.onap.so.rest.exceptions.RestProcessingException;
@@ -60,6 +70,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
+import org.onap.so.db.catalog.client.CatalogDbClient;
 
 /**
  * @author waqas.ikram@ericsson.com
@@ -75,6 +87,13 @@ public class SoMonitoringController {
     private final DatabaseServiceProvider databaseServiceProvider;
 
     private final CamundaProcessDataServiceProvider camundaProcessDataServiceProvider;
+
+    private static final String SERVICE = "SERVICE";
+    private static final String NETWORK = "NETWORK";
+    private static final String VNF = "VNF";
+
+    @Autowired
+    private CatalogDbClient catalogDbClient;
 
     @Autowired
     RestTemplate restTemplate;
@@ -318,56 +337,243 @@ public class SoMonitoringController {
     @POST
     @Path("/serviceRecipes")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response setServiceRecipes(final ServiceRecipe requestBody) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String requestBodyJson = null;
+    public Response setServiceRecipes(final String request) {
+        Map<String, String> mapRecipeInfo;
+        ObjectMapper mapper = new ObjectMapper();
+
         try {
-            requestBodyJson = objectMapper.writeValueAsString(requestBody);
-            LOGGER.info(" SoMonitoringController setServiceRecipes request recieved {}", requestBodyJson);
 
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
-            org.springframework.http.HttpEntity<String> requestEntity =
-                    new org.springframework.http.HttpEntity<>(requestBodyJson, headers);
+            try {
+                mapRecipeInfo = mapper.readValue(request, Map.class);
 
-            LOGGER.info("SoMonitoringController setServiceRecipes  request to be send  :{}", requestEntity);
+            } catch (Exception e) {
+                LOGGER.debug("Mapping of request to JSON object failed : ", e);
+                return Response.status(200).header("Access-Control-Allow-Origin", "*").build();
+            }
 
-            ResponseEntity<String> responseEntity =
-                    restTemplate.postForEntity(bpmnBaseUrl + "/serviceRecipes", requestEntity, String.class);
-            LOGGER.info("setServiceRecipes  respone   :{}", responseEntity);
+            String type = mapRecipeInfo.get("modelType");
+            String modelVersionId = mapRecipeInfo.get("modelVersionId");
+            String action = mapRecipeInfo.get("operation");
+            String orchestrationFlow = "/mso/async/services/" + mapRecipeInfo.get("orchestrationFlow");
+            String modelName = mapRecipeInfo.get("modelName");
+            String description = action + " orchestration flow for template " + mapRecipeInfo.get("modelName");
 
-            return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(responseEntity.getBody())
-                    .build();
+            String[] validTypes = {SERVICE, NETWORK, VNF};
 
+            if (org.springframework.util.StringUtils.isEmpty(type)
+                    || !Arrays.asList(validTypes).contains(type.toUpperCase())) {
+                return Response.status(200).header("Access-Control-Allow-Origin", "*")
+                        .entity("{\"errMsg\":\"type is invalid.\"}").build();
+
+            }
+            int assignedId = 0;
+            boolean isModelVersionExists = false;
+            Object[] conflictAndIdCheck;
+
+            if (type.equalsIgnoreCase(SERVICE)) {
+                isModelVersionExists = isServiceModelVersionIdExists(modelVersionId);
+                if (!isModelVersionExists) {
+                    return Response.status(200).header("Access-Control-Allow-Origin", "*")
+                            .entity("{\"errMsg\":\"The service template does not exist.\"}").build();
+                }
+
+                conflictAndIdCheck = isServiceActionConflict(modelVersionId, action);
+                if ((boolean) conflictAndIdCheck[0]) {
+                    return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(
+                            "{\"errMsg\":\"The recipe for this action of the service template already exists.\"}")
+                            .build();
+                }
+                assignedId = (int) conflictAndIdCheck[1] + 1;
+                ServiceRecipe serviceRecipe = new ServiceRecipe();
+                serviceRecipe.setId(assignedId);
+                serviceRecipe.setServiceModelUUID(modelVersionId);
+                serviceRecipe.setAction(action);
+                serviceRecipe.setOrchestrationUri(orchestrationFlow);
+                serviceRecipe.setRecipeTimeout(180);
+                serviceRecipe.setDescription(description);
+                catalogDbClient.postServiceRecipe(serviceRecipe);
+            } else if (type.equalsIgnoreCase(NETWORK)) {
+
+                isModelVersionExists = isNetworkVersionIdValid(modelVersionId);
+                if (!isModelVersionExists) {
+                    return Response.status(200).header("Access-Control-Allow-Origin", "*")
+                            .entity("{\"errMsg\":\"The network template does not exist.\"}").build();
+                }
+
+                conflictAndIdCheck = isNetworkActionConflict(modelVersionId, action);
+                if ((boolean) conflictAndIdCheck[0]) {
+                    return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(
+                            "{\"errMsg\":\"The recipe for this action of the network template already exists.\"}")
+                            .build();
+                }
+
+                assignedId = (int) conflictAndIdCheck[1] + 1;
+                NetworkRecipe nwrecipe = new NetworkRecipe();
+                nwrecipe.setId(assignedId);
+                nwrecipe.setModelName(modelName);
+                nwrecipe.setAction(action);
+                nwrecipe.setOrchestrationUri(orchestrationFlow);
+                nwrecipe.setDescription(description);
+                nwrecipe.setRecipeTimeout(180);
+                nwrecipe.setVersionStr(modelVersionId);
+                catalogDbClient.postNetworkRecipe(nwrecipe);
+
+            } else if (type.equalsIgnoreCase(VNF)) {
+
+                isModelVersionExists = isVnfVersionIdValid(modelVersionId);
+                if (!isModelVersionExists) {
+                    return Response.status(200).header("Access-Control-Allow-Origin", "*")
+                            .entity("{\"errMsg\":\"The Vnf template does not exist.\"}").build();
+
+                }
+
+                conflictAndIdCheck = isVfActionConflict(modelVersionId, action);
+                if ((boolean) conflictAndIdCheck[0]) {
+                    return Response.status(200).header("Access-Control-Allow-Origin", "*")
+                            .entity("{\"errMsg\":\"The recipe for this action of the vnf template already exists.\"}")
+                            .build();
+                }
+
+                assignedId = (int) conflictAndIdCheck[1] + 1;
+                VnfRecipe vnfRecipe = new VnfRecipe();
+                vnfRecipe.setId(assignedId);
+                vnfRecipe.setAction(action);
+                vnfRecipe.setDescription(description);
+                vnfRecipe.setVersionStr(modelVersionId);
+                vnfRecipe.setOrchestrationUri(orchestrationFlow);
+                vnfRecipe.setRecipeTimeout(180);
+                catalogDbClient.postVnfRecipe(vnfRecipe);
+
+            }
+
+            mapRecipeInfo.put("id", String.valueOf(assignedId));
         } catch (Exception e) {
-            LOGGER.info("SoMonitoringController setServiceRecipes error: {}", e.getMessage());
+            LOGGER.debug("WorkflowOnboardingSupport addServiceRecipDese error {} : ", e);
             return Response.status(200).header("Access-Control-Allow-Origin", "*")
                     .entity("{\"errMsg\":\"Unable to process.\"}").build();
         }
+        String resp = JSONObject.toJSONString(mapRecipeInfo);
+        return Response.status(201).header("Access-Control-Allow-Origin", "*").entity(resp).build();
+
+    }
+
+    private boolean isServiceModelVersionIdExists(String modelVersionId) {
+        List<Service> services = catalogDbClient.getServices();
+        boolean isExists = false;
+        for (Service service : services) {
+            if (service.getModelVersionId().equals(modelVersionId)) {
+                isExists = true;
+                break;
+            }
+        }
+        return isExists;
+    }
+
+    private Object[] isServiceActionConflict(String modelVersionId, String action) {
+        List<ServiceRecipe> serviceRecipes = catalogDbClient.getServiceRecipes();
+        boolean isConflict = false;
+        Object[] data = new Object[2];
+        int maxId = serviceRecipes.get(0) != null ? serviceRecipes.get(0).getId() : 1;
+        for (ServiceRecipe recipe : serviceRecipes) {
+            maxId = recipe.getId() > maxId ? recipe.getId() : maxId;
+            if (recipe.getServiceModelUUID().equals(modelVersionId)
+                    && recipe.getAction().equals(action)) {
+                isConflict = true;
+            }
+        }
+        data[0] = isConflict;
+        data[1] = maxId;
+        return data;
+    }
+
+    private Object[] isNetworkActionConflict(String modelVersionId, String action) {
+        List<NetworkRecipe> recipes = catalogDbClient.getNetworkRecipes();
+        boolean isConflict = false;
+        Object[] data = new Object[2];
+        int maxId = recipes.get(0) != null ? recipes.get(0).getId() : 1;
+        for (NetworkRecipe recipe : recipes) {
+            maxId = recipe.getId() > maxId ? recipe.getId() : maxId;
+            if (recipe.getVersionStr().equals(modelVersionId)
+                    && recipe.getAction().equals(action)) {
+                isConflict = true;
+
+            }
+
+        }
+        data[0] = isConflict;
+        data[1] = maxId;
+        return data;
+    }
+
+    private Object[] isVfActionConflict(String modelVersionId, String action) {
+        List<VnfRecipe> vnfRecipes = catalogDbClient.getVnfRecipes();
+        boolean isConflict = false;
+        Object[] data = new Object[2];
+        int maxId = vnfRecipes.get(0) != null ? vnfRecipes.get(0).getId() : 1;
+        for (VnfRecipe recipe : vnfRecipes) {
+            maxId = recipe.getId() > maxId ? recipe.getId() : maxId;
+            if (recipe.getVersionStr().equals(modelVersionId)
+                    && recipe.getAction().equals(action)) {
+                isConflict = true;
+            }
+        }
+        data[0] = isConflict;
+        data[1] = maxId;
+        return data;
+    }
+
+
+    private boolean isNetworkVersionIdValid(String modelVersionId) {
+        List<NetworkResource> networkResources = catalogDbClient.getNetworkResources();
+        boolean isExists = false;
+        for (NetworkResource networkResource : networkResources) {
+            if (networkResource.getModelVersion().equals(modelVersionId)) {
+                isExists = true;
+                break;
+            }
+        }
+        return isExists;
+    }
+
+    private boolean isVnfVersionIdValid(String modelVersionId) {
+        List<VnfResource> vnfResources = catalogDbClient.getVnfResources();
+        boolean isExists = false;
+        for (VnfResource vnfResource : vnfResources) {
+            if (vnfResource.getModelVersion().equals(modelVersionId)) {
+                isExists = true;
+                break;
+            }
+        }
+        return isExists;
     }
 
     @GET
     @Path("/serviceRecipes")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getServiceRecipes() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String requestBodyJson = null;
         try {
             LOGGER.info(" SoMonitoringController setServiceRecipes request recieved");
 
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
-            org.springframework.http.HttpEntity<String> requestEntity =
-                    new org.springframework.http.HttpEntity<>(headers);
+            List<ServiceRecipe> serviceRecipes = catalogDbClient.getServiceRecipes();
+            Map<String, List<Map<String, String>>> mapNetworkRecipes = new HashMap<String, List<Map<String, String>>>();
+            List<Map<String, String>> recipeList = new ArrayList<Map<String, String>>();
+            for (ServiceRecipe serviceRecipe : serviceRecipes) {
+                Map<String, String> recipeObj = new HashMap<String, String>();
+                recipeObj.put("id", String.valueOf(serviceRecipe.getId()));
+                recipeObj.put("paramXsd", String.valueOf(serviceRecipe.getParamXsd()));
+                recipeObj.put("serviceModelUUID", String.valueOf(serviceRecipe.getServiceModelUUID()));
+                recipeObj.put("description", String.valueOf(serviceRecipe.getDescription()));
+                recipeObj.put("action", String.valueOf(serviceRecipe.getAction()));
+                recipeObj.put("orchestrationUri", String.valueOf(serviceRecipe.getOrchestrationUri()));
+                recipeObj.put("recipeTimeout", String.valueOf(serviceRecipe.getRecipeTimeout()));
+                recipeObj.put("serviceTimeoutInterim", String.valueOf(serviceRecipe.getServiceTimeoutInterim()));
+                recipeObj.put("created", String.valueOf(serviceRecipe.getCreated()));
+                recipeList.add(recipeObj);
+            }
+            mapNetworkRecipes.put("serviceRecipes", recipeList);
+            String resp = JSONObject.toJSONString(mapNetworkRecipes);
 
-            LOGGER.info("SoMonitoringController getServiceRecipes  request to be send ");
-
-            ResponseEntity<String> responseEntity =
-                    restTemplate.getForEntity(bpmnBaseUrl + "/serviceRecipes", String.class);
-            LOGGER.info("getServiceRecipes  respone   :{}", responseEntity);
-
-            return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(responseEntity.getBody())
-                    .build();
+            return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(resp).build();
 
         } catch (Exception e) {
             LOGGER.info("SoMonitoringController setServiceRecipes error: {}", e.getMessage());
@@ -380,24 +586,30 @@ public class SoMonitoringController {
     @Path("/networkRecipes")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getNetworkRecipes() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String requestBodyJson = null;
         try {
             LOGGER.info(" SoMonitoringController setNetworkRecipes request recieved");
 
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
-            org.springframework.http.HttpEntity<String> requestEntity =
-                    new org.springframework.http.HttpEntity<>(headers);
+            List<NetworkRecipe> networkRecipes = catalogDbClient.getNetworkRecipes();
+            Map<String, List<Map<String, String>>> mapNetworkRecipes = new HashMap<String, List<Map<String, String>>>();
+            List<Map<String, String>> recipeList = new ArrayList<Map<String, String>>();
+            for (NetworkRecipe networkRecipe : networkRecipes) {
+                Map<String, String> recipeObj = new HashMap<String, String>();
+                recipeObj.put("id", String.valueOf(networkRecipe.getId()));
+                recipeObj.put("paramXsd", String.valueOf(networkRecipe.getParamXsd()));
+                recipeObj.put("modelName", String.valueOf(networkRecipe.getModelName()));
+                recipeObj.put("description", String.valueOf(networkRecipe.getDescription()));
+                recipeObj.put("action", String.valueOf(networkRecipe.getAction()));
+                recipeObj.put("orchestrationUri", String.valueOf(networkRecipe.getOrchestrationUri()));
+                recipeObj.put("recipeTimeout", String.valueOf(networkRecipe.getRecipeTimeout()));
+                recipeObj.put("versionStr", String.valueOf(networkRecipe.getVersionStr()));
+                recipeObj.put("serviceType", String.valueOf(networkRecipe.getServiceType()));
+                recipeObj.put("created", String.valueOf(networkRecipe.getCreated()));
+                recipeList.add(recipeObj);
+            }
+            mapNetworkRecipes.put("networkRecipes", recipeList);
+            String resp = JSONObject.toJSONString(mapNetworkRecipes);
 
-            LOGGER.info("SoMonitoringController getNetworkRecipes  request to be send ");
-
-            ResponseEntity<String> responseEntity =
-                    restTemplate.getForEntity(bpmnBaseUrl + "/networkRecipes", String.class);
-            LOGGER.info("getNetworkRecipes  respone   :{}", responseEntity);
-
-            return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(responseEntity.getBody())
-                    .build();
+            return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(resp).build();
 
         } catch (Exception e) {
             LOGGER.info("SoMonitoringController getNetworkRecipes error: {}", e.getMessage());
@@ -410,24 +622,31 @@ public class SoMonitoringController {
     @Path("/vnfRecipes")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getVnfRecipes() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String requestBodyJson = null;
         try {
             LOGGER.info(" SoMonitoringController getVnfRecipes request recieved");
 
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
-            org.springframework.http.HttpEntity<String> requestEntity =
-                    new org.springframework.http.HttpEntity<>(headers);
+            List<VnfRecipe> vnfRecipes = catalogDbClient.getVnfRecipes();
+            Map<String, List<Map<String, String>>> mapVnfRecipes = new HashMap<String, List<Map<String, String>>>();
+            List<Map<String, String>> recipeList = new ArrayList<Map<String, String>>();
+            for (VnfRecipe vnfRecipe : vnfRecipes) {
+                Map<String, String> recipeObj = new HashMap<String, String>();
+                recipeObj.put("id", String.valueOf(vnfRecipe.getId()));
+                recipeObj.put("nfRole", String.valueOf(vnfRecipe.getNfRole()));
+                recipeObj.put("paramXsd", String.valueOf(vnfRecipe.getParamXsd()));
+                recipeObj.put("vfModuleId", String.valueOf(vnfRecipe.getVfModuleId()));
+                recipeObj.put("description", String.valueOf(vnfRecipe.getDescription()));
+                recipeObj.put("action", String.valueOf(vnfRecipe.getAction()));
+                recipeObj.put("orchestrationUri", String.valueOf(vnfRecipe.getOrchestrationUri()));
+                recipeObj.put("recipeTimeout", String.valueOf(vnfRecipe.getRecipeTimeout()));
+                recipeObj.put("versionStr", String.valueOf(vnfRecipe.getVersionStr()));
+                recipeObj.put("serviceType", String.valueOf(vnfRecipe.getServiceType()));
+                recipeObj.put("created", String.valueOf(vnfRecipe.getCreated()));
+                recipeList.add(recipeObj);
+            }
+            mapVnfRecipes.put("vnfRecipes", recipeList);
+            String resp = JSONObject.toJSONString(mapVnfRecipes);
 
-            LOGGER.info("SoMonitoringController getVnfRecipes  request to be send ");
-
-            ResponseEntity<String> responseEntity =
-                    restTemplate.getForEntity(bpmnBaseUrl + "/vnfRecipes", String.class);
-            LOGGER.info("getVnfRecipes  respone   :{}", responseEntity);
-
-            return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(responseEntity.getBody())
-                    .build();
+            return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(resp).build();
 
         } catch (Exception e) {
             LOGGER.info("SoMonitoringController getVnfRecipes error: {}", e.getMessage());

@@ -19,7 +19,13 @@ mso:
       api:
         url: http://so-request-db-adapter.onap:8083/infraActiveRequests/
         auth: Basic YnBlbDpwYXNzd29yZDEk
-
+  catalog:
+    db:
+      endpoint: http://so-catalog-db-adapter.onap:8082/ecomp/mso/catalog
+      spring:
+        endpoint: http://so-catalog-db-adapter.onap:8082
+  db:
+    auth: Basic YnBlbDpwYXNzd29yZDEk
 spring:
   main:
     allow-bean-definition-overriding: true
