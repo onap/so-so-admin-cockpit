@@ -1,0 +1,183 @@
+
+<base href="/">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" ng-href="./onboard.component.scss">
+<div class="completeForm">
+   <div>
+     <h3>Dynamic Deployment of workflow</h3>
+   </div>
+  <div class="uploadwar onboard-box" style="padding: 25px;">
+    <label>
+      Recipe war:
+      <span style="font-weight: bold;cursor: pointer;margin-left: 5px;" title="bpmn, groovy and java files">
+        ?
+      </span>
+    </label>
+    <br>
+    <input class="" type="file" class="upload-box form-control pad-top-not5"
+      (change)="beforeUpload($event)"
+      placeholder="Upload-BPMN-war" required>
+      <br>
+    <button (click)="onSubmit()" class="btn btn-primary">
+      Upload Recipe
+    </button>
+  </div>
+  <br />
+  <!-- Table to display selected fields if data present -->
+  <div class="example-container mat-elevation-z8">
+    <mat-tab-group class="tab-group" (focusChange)="changeTab($event)">
+      <mat-tab label="Service Recipe">
+        <mat-table [dataSource]="serviceRecipe" matSort>
+          <ng-container matColumnDef="serviceModelUUID">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Model UUID </mat-header-cell>
+            <mat-cell *matCellDef="let recipe">{{ recipe.serviceModelUUID }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="paramXsd">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> ParamXsd </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.paramXsd }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="action">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Action </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.action }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="orchestrationUri">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Orchestration Uri </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.orchestrationUri }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="description">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Description </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.description }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="recipeTimeout">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Recipe Timeout </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.recipeTimeout }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="serviceTimeoutInterim">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Timeout Interim </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.serviceTimeoutInterim }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="created">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Created </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.created }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="operation">
+            <mat-header-cell *matHeaderCellDef>Operation</mat-header-cell>
+            <mat-cell *matCellDef="let recipe">
+              <button class="btn btn-primary" (click)="addRecipe(recipe)">Modify</button>
+            </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedServiceColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedServiceColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="pageSizeOptions" showFirstLastButtons>
+        </mat-paginator>
+      </mat-tab>
+      <mat-tab label="Network Recipe">
+        <mat-table [dataSource]="networkRecipe" matSort>
+          <ng-container matColumnDef="modelName">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Model Name </mat-header-cell>
+            <mat-cell *matCellDef="let recipe">{{ recipe.modelName }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="paramXsd">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> ParamXsd </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.paramXsd }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="action">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Action </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.action }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="description">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Description </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.description }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="orchestrationUri">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Orchestration Uri </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.orchestrationUri }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="recipeTimeout">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Recipe Timeout </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.recipeTimeout }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="versionStr">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Version </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.versionStr }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="serviceType">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Type </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.serviceType }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="created">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Created </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.created }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="operation">
+            <mat-header-cell *matHeaderCellDef>Operation</mat-header-cell>
+            <mat-cell *matCellDef="let recipe">
+              <button  class="btn btn-primary" (click)="addRecipe(recipe)">Modify</button>
+            </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedNetworkColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedNetworkColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="pageSizeOptions" showFirstLastButtons>
+        </mat-paginator>
+      </mat-tab>
+      <mat-tab label="VNF Recipe">
+        <mat-table [dataSource]="vnfRecipe" matSort>
+          <ng-container matColumnDef="nfRole">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> NF Role </mat-header-cell>
+            <mat-cell *matCellDef="let recipe">{{ recipe.nfRole }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="paramXsd">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Param Xsd </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.paramXsd }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="vfModuleId">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> VFM Id </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.vfModuleId }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="action">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Action </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.action }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="description">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Description </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.description }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="orchestrationUri">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Orchestration Uri </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.orchestrationUri }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="recipeTimeout">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Recipe Timeout </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.recipeTimeout }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="versionStr">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Version </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.versionStr }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="serviceType">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Type </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.serviceType }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="created">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Created </mat-header-cell>
+            <mat-cell *matCellDef="let recipe"> {{ recipe.created }} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="operation">
+            <mat-header-cell *matHeaderCellDef>Operation</mat-header-cell>
+            <mat-cell *matCellDef="let recipe">
+              <button class="btn btn-primary" (click)="addRecipe(recipe)">Modify</button>
+            </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedVnfColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedVnfColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="pageSizeOptions" showFirstLastButtons>
+        </mat-paginator>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>
+<ngx-spinner bdColor="rgba(51, 51, 51, 0.8)" size="large" color="#00285f" type="ball-spin-clockwise-fade-rotating"></ngx-spinner>
+<router-outlet></router-outlet>

@@ -1,0 +1,86 @@
+<h1 mat-dialog-title style="font-size: 25px;">{{this.parentData.addNew ? 'Add Recipe' : 'Update Recipe'}}</h1>
+<hr>
+<div mat-dialog-content>
+    <div class="container">
+        <form novalidate
+            [formGroup]="myform"
+            (ngSubmit)="onSubmit()">
+            <div class="form-group"
+                *ngIf="modeType == 'Network Recipe'"
+                [ngClass]="{
+                'has-danger': modelName.invalid && (modelName.dirty || modelName.touched),
+                'has-success': modelName.valid && (modelName.dirty || modelName.touched)
+            }">
+                <label>Model Name</label>
+                <input type="text"
+                    class="form-control"
+                    formControlName="modelName"
+                    required>
+            </div>
+            <div class="form-group"
+                *ngIf="modeType == 'VNF Recipe'"
+                [ngClass]="{
+                'has-danger': modelName.invalid && (modelName.dirty || modelName.touched),
+                'has-success': modelName.valid && (modelName.dirty || modelName.touched)
+            }">
+                <label>NF Role</label>
+                <input type="text"
+                    class="form-control"
+                    formControlName="nfRole"
+                    required>
+            </div>
+            <div class="form-group"
+                [ngClass]="{
+                'has-danger': modelVersionId.invalid && (modelVersionId.dirty || modelVersionId.touched),
+                'has-success': modelVersionId.valid && (modelVersionId.dirty || modelVersionId.touched)
+            }">
+                <label>{{modeType == 'Service Recipe' ? 'Service Model UUID' : 'Model Versison ID'}}</label>
+                <input type="text"
+                        class="form-control"
+                        formControlName="modelVersionId"
+                        required>
+            </div>
+            <div class="form-group"
+                [ngClass]="{
+                    'has-danger': operation.invalid && (operation.dirty || operation.touched),
+                    'has-success': operation.valid && (operation.dirty || operation.touched)
+            }">
+                <label>Action</label>
+                <input type="operation"
+                    class="form-control"
+                    formControlName="operation"
+                    required>
+            </div>
+            <div class="form-group"
+                [ngClass]="{
+                    'has-danger': orchestrationFlow.invalid && (orchestrationFlow.dirty || orchestrationFlow.touched),
+                    'has-success': orchestrationFlow.valid && (orchestrationFlow.dirty || orchestrationFlow.touched)
+            }">
+                <label>Orchestration URI</label>
+                <input type="orchestrationFlow"
+                    class="form-control"
+                    formControlName="orchestrationFlow"
+                    required>
+            </div>
+            <div class="form-group"
+                *ngIf="modeType == 'Service Recipe'"
+                [ngClass]="{
+                'has-danger': modelName.invalid && (modelName.dirty || modelName.touched),
+                'has-success': modelName.valid && (modelName.dirty || modelName.touched)
+            }">
+                <label>Recipe Timeout</label>
+                <input type="text"
+                    class="form-control"
+                    formControlName="recipeTimeout"
+                    required>
+            </div>
+            <button style="margin-right: 10px;"
+                class="btn btn-primary"
+                (click)="closeDialog($event)">Cancel
+            </button>
+            <button type="submit"
+                    class="btn btn-primary">Submit
+            </button>
+        </form>
+    </div>
+</div>

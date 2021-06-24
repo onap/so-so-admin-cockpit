@@ -1,6 +1,7 @@
-<!--
+
+/**
 ============LICENSE_START=======================================================
- Copyright (C) 2018 Ericsson. All rights reserved.
+ Copyright (C) 2019 Ericsson. All rights reserved.
 ================================================================================
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,18 +18,14 @@ See the License for the specific language governing permissions and
 SPDX-License-Identifier: Apache-2.0
 ============LICENSE_END=========================================================
 
-@authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com
--->
+@authors: andrei.barcovschi@ericsson.com, waqas.ikram@ericsson.com
+*/
 
-<nav>
-  <ul>
-    <li>
-      <a routerLink="/">Home</a>
-    </li>
-  </ul>
-  <ul>
-    <li>
-      <a routerLink="/onboard">Update Recipe</a>
-    </li>
-  </ul>
-</nav>
+export class Constants {
+
+  public static DISPLAYED_COLUMNS_SERVICE = ['serviceModelUUID', 'paramXsd', 'action', 'description', 'orchestrationUri', 'recipeTimeout', 'serviceTimeoutInterim', 'created', 'operation'];
+  public static DISPLAYED_COLUMNS_NETWORK = ['modelName', 'paramXsd', 'action', 'description', 'orchestrationUri', 'recipeTimeout', 'versionStr', 'serviceType', 'created', 'operation'];
+  public static DISPLAYED_COLUMNS_VNF = ['nfRole', 'paramXsd', 'vfModuleId', 'action', 'description', 'orchestrationUri', 'recipeTimeout', 'versionStr', 'serviceType', 'created', 'operation'];
+
+  public static DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+}

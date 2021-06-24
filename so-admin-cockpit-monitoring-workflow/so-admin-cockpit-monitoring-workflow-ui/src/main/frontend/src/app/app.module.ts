@@ -37,6 +37,8 @@ import { MatFormFieldModule, MatInputModule, MatTableModule, MatTabsModule, MatS
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { RouterModule, Routes } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
+import { OnboardComponent } from './onboard/onboard.component';
+import { RecipeComponent } from './recipe/recipe.component'
 
 @NgModule({
   declarations: [
@@ -44,7 +46,9 @@ import { APP_BASE_HREF } from '@angular/common';
     SidebarComponent,
     TopbarComponent,
     HomeComponent,
-    DetailsComponent
+    DetailsComponent,
+    OnboardComponent,
+    RecipeComponent
   ],
   imports: [
     BrowserModule,
@@ -68,6 +72,7 @@ import { APP_BASE_HREF } from '@angular/common';
     RouterModule.forRoot([]),
     ReactiveFormsModule
   ],
+  entryComponents: [RecipeComponent],
   schemas: [
     CUSTOM_ELEMENTS_SCHEMA
   ],

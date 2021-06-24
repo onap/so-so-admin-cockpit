@@ -28,7 +28,14 @@ body {
   font-family: 'Montserrat', sans-serif;
   height: 100vh;
 }
-
+.addRecipe {
+  button {
+    height: 15px !important;
+    cursor: pointer !important;
+    height: 36px !important;
+    margin: 5px 10px !important;
+  }
+}
 #container {
   display: grid;
   grid-template-columns: 70px auto;
