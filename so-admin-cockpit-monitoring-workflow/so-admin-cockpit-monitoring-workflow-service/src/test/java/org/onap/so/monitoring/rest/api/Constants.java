@@ -56,6 +56,42 @@ public class Constants {
     public static final Path SEARCH_RESULT_RESPONSE_JSON_FILE =
             Paths.get("src/test/resources/databaseResponses/searchResult.json");
 
+    public static final Path SERVICE_RECIPE_RESPONSE_JSON_FILE =
+            Paths.get("src/test/resources/catalogResponses/serviceRecipeResponse.json");
+
+    public static final Path SERVICE_RECIPE_REQUEST_JSON_FILE =
+            Paths.get("src/test/resources/catalogResponses/serviceRecipeRequest.json");
+
+    public static final Path NETWORK_RECIPE_REQUEST_JSON_FILE =
+            Paths.get("src/test/resources/catalogResponses/networkRecipeResponse.json");
+
+    public static final Path SERVICE_RESPONSE_JSON_FILE =
+            Paths.get("src/test/resources/catalogResponses/serviceResponse.json");
+
+    public static final Path SERVICE_MODELVERSIONID_NOT_EXIST =
+            Paths.get("src/test/resources/catalogResponses/service_Model_Version_Not_Exist.json");
+
+    public static final Path SERVICE_SERVICE_ACTION_CONFLICT =
+            Paths.get("src/test/resources/catalogResponses/service_ServiceActionConflict.json");
+
+    public static final Path SERVICE_TYPE_NETWORK_REQUEST =
+            Paths.get("src/test/resources/catalogResponses/serviceRecipeRequest_TypeNetwork.json");
+
+    public static final Path SERVICE_TYPE_NETWORK_RESPONSE =
+            Paths.get("src/test/resources/catalogResponses/service_Type_Network_Response.json");
+
+    public static final Path SERVICE_TYPE_VNF_REQUEST =
+            Paths.get("src/test/resources/catalogResponses/serviceRecipeRequest_TypeVnf.json");
+
+    public static final Path VNF_RECIPE_REQUEST_JSON_FILE =
+            Paths.get("src/test/resources/catalogResponses/vnfRecipeResponse.json");
+
+    public static final Path SERVICE_TYPE_VNF_RESPONSE =
+            Paths.get("src/test/resources/catalogResponses/service_Type_Vnf_Response.json");
+
+    public static final Path EMPTY_RESPONSE_JSON_FILE =
+            Paths.get("src/test/resources/catalogResponses/EmptyResponse.json");
+
     public static final String ID = UUID.randomUUID().toString();
 
     public static final long END_TIME_IN_MS = 1546351200000l;
