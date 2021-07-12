@@ -39,6 +39,8 @@ public class Constants {
 
     public static final String SOURCE_TEST_FOLDER = "src/test/resources/camundaResponses/";
 
+    public static final String SOURCE_CATALOG_FOLDER = "src/test/resources/catalogResponses/";
+
     public static final Path PROCESS_DEF_RESPONSE_JSON_FILE = Paths.get(SOURCE_TEST_FOLDER + "processDefinition.json");
 
     public static final Path ACTIVITY_INSTANCE_RESPONSE_JSON_FILE =
@@ -55,6 +57,42 @@ public class Constants {
 
     public static final Path SEARCH_RESULT_RESPONSE_JSON_FILE =
             Paths.get("src/test/resources/databaseResponses/searchResult.json");
+
+    public static final Path SERVICE_RECIPE_RESPONSE_JSON_FILE =
+            Paths.get(SOURCE_CATALOG_FOLDER + "serviceRecipeResponse.json");
+
+    public static final Path SERVICE_RECIPE_REQUEST_JSON_FILE =
+            Paths.get(SOURCE_CATALOG_FOLDER + "serviceRecipeRequest.json");
+
+    public static final Path NETWORK_RECIPE_RESPONSE_JSON_FILE =
+            Paths.get(SOURCE_CATALOG_FOLDER + "networkRecipeResponse.json");
+
+    public static final Path SERVICE_RESPONSE_JSON_FILE =
+            Paths.get(SOURCE_CATALOG_FOLDER + "serviceResponse.json");
+
+    public static final Path SERVICE_MODELVERSIONID_NOT_EXIST =
+            Paths.get(SOURCE_CATALOG_FOLDER + "service_Model_Version_Not_Exist.json");
+
+    public static final Path SERVICE_SERVICE_ACTION_CONFLICT =
+            Paths.get(SOURCE_CATALOG_FOLDER + "service_ServiceActionConflict.json");
+
+    public static final Path SERVICE_TYPE_NETWORK_REQUEST =
+            Paths.get(SOURCE_CATALOG_FOLDER + "serviceRecipeRequest_TypeNetwork.json");
+
+    public static final Path SERVICE_TYPE_NETWORK_RESPONSE =
+            Paths.get(SOURCE_CATALOG_FOLDER + "service_Type_Network_Response.json");
+
+    public static final Path SERVICE_TYPE_VNF_REQUEST =
+            Paths.get(SOURCE_CATALOG_FOLDER + "serviceRecipeRequest_TypeVnf.json");
+
+    public static final Path VNF_RECIPE_RESPONSE_JSON_FILE =
+            Paths.get(SOURCE_CATALOG_FOLDER + "vnfRecipeResponse.json");
+
+    public static final Path SERVICE_TYPE_VNF_RESPONSE =
+            Paths.get(SOURCE_CATALOG_FOLDER + "service_Type_Vnf_Response.json");
+
+    public static final Path EMPTY_RESPONSE_JSON_FILE =
+            Paths.get(SOURCE_CATALOG_FOLDER + "EmptyResponse.json");
 
     public static final String ID = UUID.randomUUID().toString();
 

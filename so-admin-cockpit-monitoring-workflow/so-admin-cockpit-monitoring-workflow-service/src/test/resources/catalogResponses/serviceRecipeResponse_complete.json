@@ -1,0 +1,224 @@
+{
+  "serviceRecipe": [
+    {
+      "id": 1,
+      "serviceModelUUID": "48cc36cc-a9fe-11e7-8b4b-0242ac120002",
+      "action": "createInstance",
+      "description": "Vnf api recipe to create service-instance",
+      "orchestrationUri": "/mso/async/services/CreateGenericALaCarteServiceInstance",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2017-10-05T18:52:03.000+00:00"
+    },
+    {
+      "id": 2,
+      "serviceModelUUID": "48cc36cc-a9fe-11e7-8b4b-0242ac120002",
+      "action": "deleteInstance",
+      "description": "Vnf api recipe to delete service-instance",
+      "orchestrationUri": "/mso/async/services/DeleteGenericALaCarteServiceInstance",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2017-10-05T18:52:03.000+00:00"
+    },
+    {
+      "id": 3,
+      "serviceModelUUID": "48cc3acd-a9fe-11e7-8b4b-0242ac120002",
+      "action": "createInstance",
+      "description": "DEFAULT recipe to create service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/CreateGenericALaCarteServiceInstance",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2017-10-05T18:52:03.000+00:00"
+    },
+    {
+      "id": 4,
+      "serviceModelUUID": "48cc3acd-a9fe-11e7-8b4b-0242ac120002",
+      "action": "deleteInstance",
+      "description": "DEFAULT recipe to delete service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/DeleteGenericALaCarteServiceInstance",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2017-10-05T18:52:03.000+00:00"
+    },
+    {
+      "id": 11,
+      "serviceModelUUID": "dfcd7471-16c7-444e-8268-d4c50d90593a",
+      "action": "createInstance",
+      "description": "Custom recipe to create E2E service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/CreateCustomE2EServiceInstance",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2017-10-05T18:52:03.000+00:00"
+    },
+    {
+      "id": 12,
+      "serviceModelUUID": "dfcd7471-16c7-444e-8268-d4c50d90593a",
+      "action": "deleteInstance",
+      "description": "Custom recipe to delete E2E service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/DeleteCustomE2EServiceInstance",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2017-10-05T18:52:03.000+00:00"
+    },
+    {
+      "id": 15,
+      "serviceModelUUID": "dfcd7471-16c7-444e-8268-d4c50d90593a",
+      "action": "updateInstance",
+      "description": "Custom recipe to update E2E service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/UpdateCustomE2EServiceInstance",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2018-03-05T10:52:03.000+00:00"
+    },
+    {
+      "id": 16,
+      "serviceModelUUID": "dfcd7471-16c7-444e-8268-d4c50d90593a",
+      "action": "scaleInstance",
+      "description": "Custom recipe to scale E2E service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/ScaleCustomE2EServiceInstance",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2018-05-15T18:52:03.000+00:00"
+    },
+    {
+      "id": 17,
+      "serviceModelUUID": "3d30a774-e149-11ea-87d0-0242ac130003",
+      "action": "createInstance",
+      "description": "Custom recipe to allocate 3gpp service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/AllocateSliceSubnet",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2020-08-18T17:40:03.000+00:00"
+    },
+    {
+      "id": 18,
+      "serviceModelUUID": "3d30a774-e149-11ea-87d0-0242ac130003",
+      "action": "deleteInstance",
+      "description": "Custom recipe to deallocate 3gpp service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/DeAllocateSliceSubnet",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2020-08-18T18:40:03.000+00:00"
+    },
+    {
+      "id": 19,
+      "serviceModelUUID": "3d30a774-e149-11ea-87d0-0242ac130003",
+      "action": "updateInstance",
+      "description": "Custom recipe to modify 3gpp service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/ModifySliceSubnet",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2020-08-18T18:40:03.000+00:00"
+    },
+    {
+      "id": 20,
+      "serviceModelUUID": "3d30a774-e149-11ea-87d0-0242ac130003",
+      "action": "activateInstance",
+      "description": "Custom recipe to activate/deactivate 3gpp service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/ActivateSliceSubnet",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2020-08-18T18:40:03.000+00:00"
+    },
+    {
+      "id": 21,
+      "serviceModelUUID": "3d30a774-e149-11ea-87d0-0242ac130003",
+      "action": "deactivateInstance",
+      "description": "Custom recipe to activate/deactivate 3gpp service-instance if no custom BPMN flow is found",
+      "orchestrationUri": "/mso/async/services/ActivateSliceSubnet",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2020-08-18T18:40:03.000+00:00"
+    },
+    {
+      "id": 500,
+      "serviceModelUUID": "d88da85c-d9e8-4f73-b837-3a72a431622b",
+      "action": "updateInstance",
+      "description": "Gr api recipe to update service-instance",
+      "orchestrationUri": "/mso/async/services/WorkflowActionBB",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2017-10-05T18:52:03.000+00:00"
+    },
+    {
+      "id": 501,
+      "serviceModelUUID": "d88da85c-d9e8-4f73-b837-3a72a431622b",
+      "action": "activateInstance",
+      "description": "Gr api recipe to activate service-instance",
+      "orchestrationUri": "/mso/async/services/WorkflowActionBB",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2021-07-01T10:41:12.000+00:00"
+    },
+    {
+      "id": 502,
+      "serviceModelUUID": "d88da85c-d9e8-4f73-b837-3a72a431622b",
+      "action": "createInstance",
+      "description": "Gr api recipe to create service-instance",
+      "orchestrationUri": "/mso/async/services/WorkflowActionBB",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2021-07-01T10:41:12.000+00:00"
+    },
+    {
+      "id": 503,
+      "serviceModelUUID": "d88da85c-d9e8-4f73-b837-3a72a431622b",
+      "action": "deactivateInstance",
+      "description": "Gr api recipe to deactivate service-instance",
+      "orchestrationUri": "/mso/async/services/WorkflowActionBB",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2021-07-01T10:41:12.000+00:00"
+    },
+    {
+      "id": 504,
+      "serviceModelUUID": "d88da85c-d9e8-4f73-b837-3a72a431622b",
+      "action": "deleteInstance",
+      "description": "Gr api recipe to delete service-instance",
+      "orchestrationUri": "/mso/async/services/WorkflowActionBB",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2021-07-01T10:41:12.000+00:00"
+    },
+    {
+      "id": 505,
+      "serviceModelUUID": "d88da85c-d9e8-4f73-b837-3a72a431622b",
+      "action": "assignInstance",
+      "description": "Gr api recipe to assign service-instance",
+      "orchestrationUri": "/mso/async/services/WorkflowActionBB",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2021-07-01T10:41:12.000+00:00"
+    },
+    {
+      "id": 506,
+      "serviceModelUUID": "d88da85c-d9e8-4f73-b837-3a72a431622b",
+      "action": "unassignInstance",
+      "description": "Gr api recipe to unassign service-instance",
+      "orchestrationUri": "/mso/async/services/WorkflowActionBB",
+      "paramXsd": null,
+      "recipeTimeout": 180,
+      "serviceTimeoutInterim": null,
+      "created": "2021-07-01T10:41:12.000+00:00"
+    }
+  ]
+}

@@ -552,7 +552,7 @@ public class SoMonitoringController {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getServiceRecipes() {
         try {
-            LOGGER.info(" SoMonitoringController setServiceRecipes request recieved");
+            LOGGER.info(" SoMonitoringController getServiceRecipes request recieved");
 
             List<ServiceRecipe> serviceRecipes = catalogDbClient.getServiceRecipes();
             Map<String, List<Map<String, String>>> mapNetworkRecipes = new HashMap<String, List<Map<String, String>>>();
@@ -587,7 +587,7 @@ public class SoMonitoringController {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getNetworkRecipes() {
         try {
-            LOGGER.info(" SoMonitoringController setNetworkRecipes request recieved");
+            LOGGER.info(" SoMonitoringController getNetworkRecipes request recieved");
 
             List<NetworkRecipe> networkRecipes = catalogDbClient.getNetworkRecipes();
             Map<String, List<Map<String, String>>> mapNetworkRecipes = new HashMap<String, List<Map<String, String>>>();
