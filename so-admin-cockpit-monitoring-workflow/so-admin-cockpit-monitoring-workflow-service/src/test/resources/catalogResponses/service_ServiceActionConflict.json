@@ -1,0 +1,11 @@
+{
+  "id": 1,
+  "serviceModelUUID": "48cc36cc-a9fe-11e7-8b4b-0242ac120002",
+  "action": "createInstance",
+  "description": "Vnf api recipe to create service-instance",
+  "orchestrationUri": "/mso/async/services/CreateGenericALaCarteServiceInstance",
+  "paramXsd": null,
+  "recipeTimeout": 180,
+  "serviceTimeoutInterim": null,
+  "created": "2017-10-05T18:52:03.000+00:00"
+ }
