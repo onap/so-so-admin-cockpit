@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c144afb7_0c0418b2",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/test/java/org/onap/so/monitoring/rest/api/Constants.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-07-14T09:55:03Z",
+      "side": 1,
+      "message": "USER SOURCE_TEST_FOLDER constant for all these constant to shorten it",
+      "range": {
+        "startLine": 60,
+        "startChar": 23,
+        "endLine": 60,
+        "endChar": 42
+      },
+      "revId": "7ac79154b5a7462c906d82aa699899230981b6a2",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71cf3f9e_d2c5e78a",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/test/java/org/onap/so/monitoring/rest/api/SoMonitoringTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-07-14T09:55:03Z",
+      "side": 1,
+      "message": "should assert the body as well no?",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 1
+      },
+      "revId": "7ac79154b5a7462c906d82aa699899230981b6a2",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bb51b1a_16c77187",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/test/java/org/onap/so/monitoring/rest/api/SoMonitoringTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-07-14T09:55:03Z",
+      "side": 1,
+      "message": "same here assert the body plus null shouldn\u0027t return status OK",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 1
+      },
+      "revId": "7ac79154b5a7462c906d82aa699899230981b6a2",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "761afef5_69df3e91",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/test/java/org/onap/so/monitoring/rest/api/SoMonitoringTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-07-14T09:55:03Z",
+      "side": 1,
+      "message": "move this to class level",
+      "range": {
+        "startLine": 103,
+        "startChar": 8,
+        "endLine": 103,
+        "endChar": 49
+      },
+      "revId": "7ac79154b5a7462c906d82aa699899230981b6a2",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9126db8_a6a782c8",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/test/java/org/onap/so/monitoring/rest/api/SoMonitoringTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-07-14T09:55:03Z",
+      "side": 1,
+      "message": "would suggest to check the response body as well for all tests",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 1
+      },
+      "revId": "7ac79154b5a7462c906d82aa699899230981b6a2",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7f26a6b_318a48ec",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/test/java/org/onap/so/monitoring/rest/api/SoMonitoringTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-07-14T09:55:03Z",
+      "side": 1,
+      "message": "null is error case why would it return OK",
+      "range": {
+        "startLine": 120,
+        "startChar": 8,
+        "endLine": 120,
+        "endChar": 79
+      },
+      "revId": "7ac79154b5a7462c906d82aa699899230981b6a2",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    }
+  ]
+}
