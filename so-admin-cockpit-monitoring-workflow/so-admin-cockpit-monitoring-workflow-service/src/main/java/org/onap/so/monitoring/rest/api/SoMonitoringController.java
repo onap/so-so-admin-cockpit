@@ -30,13 +30,7 @@ import java.util.Map;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -653,6 +647,33 @@ public class SoMonitoringController {
             return Response.status(200).header("Access-Control-Allow-Origin", "*")
                     .entity("{\"errMsg\":\"Unable to process.\"}").build();
         }
+    }
+
+    @DELETE
+    @Path("/serviceRecipes/{id}")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response delServiceRecipe(final @PathParam("id") String id) {
+        catalogDbClient.deleteServiceRecipe(id);
+        return Response.status(200).header("Access-Control-Allow-Origin", "*").build();
+    }
+
+    @GET
+    @Path("/serviceTemplates")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getServices() {
+        List<Service> services = catalogDbClient.getServices();
+        Map<String, List<Map<String, String>>> mapServices = new HashMap<String, List<Map<String, String>>>();
+        List<Map<String, String>> serviceList = new ArrayList<Map<String, String>>();
+        for (Service service : services) {
+            Map<String, String> serviceObj = new HashMap<String, String>();
+            serviceObj.put("modelInvariantId", service.getModelInvariantId());
+            serviceObj.put("modelVersionId", service.getModelVersionId());
+            serviceObj.put("modelName", service.getModelName());
+            serviceList.add(serviceObj);
+        }
+        mapServices.put("services", serviceList);
+        String resp = JSONObject.toJSONString(mapServices);
+        return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(resp).build();
     }
 
 }
