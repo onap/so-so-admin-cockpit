@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7da27c5a_f0650089",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/main/java/org/onap/so/monitoring/rest/api/SoMonitoringController.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-10-21T09:55:56Z",
+      "side": 1,
+      "message": "try not to use * import ... revert it back",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 21
+      },
+      "revId": "9f5e68a474b05d94f056ee28016cc5e092ae1f6d",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f3dcea5_18646a98",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/main/java/org/onap/so/monitoring/rest/api/SoMonitoringController.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-10-21T09:55:56Z",
+      "side": 1,
+      "message": "you should\u0027nt need this and if you have to do this try add this to CORS configuration https://gerrit.onap.org/r/gitweb?p\u003dso/so-admin-cockpit.git;a\u003dblob;f\u003dso-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-handler/src/main/java/org/onap/so/monitoring/configuration/rest/CorsConfigurer.java",
+      "range": {
+        "startLine": 657,
+        "startChar": 44,
+        "endLine": 657,
+        "endChar": 71
+      },
+      "revId": "9f5e68a474b05d94f056ee28016cc5e092ae1f6d",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3ce1919_2025decc",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/main/java/org/onap/so/monitoring/rest/api/SoMonitoringController.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-10-21T09:55:56Z",
+      "side": 1,
+      "message": "Shoudn\u0027t need this.... Spring should handle it",
+      "range": {
+        "startLine": 675,
+        "startChar": 8,
+        "endLine": 675,
+        "endChar": 59
+      },
+      "revId": "9f5e68a474b05d94f056ee28016cc5e092ae1f6d",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    }
+  ]
+}
