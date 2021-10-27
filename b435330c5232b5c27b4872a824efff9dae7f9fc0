@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f8ff8f2_c98285fc",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/main/java/org/onap/so/monitoring/rest/api/SoMonitoringController.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 3237
+      },
+      "writtenOn": "2021-10-27T12:48:28Z",
+      "side": 1,
+      "message": "shouldn\u0027t you check if delete was successful and based on thatreturn OK or NOT_OK",
+      "range": {
+        "startLine": 664,
+        "startChar": 0,
+        "endLine": 664,
+        "endChar": 3
+      },
+      "revId": "b435330c5232b5c27b4872a824efff9dae7f9fc0",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": true
+    }
+  ]
+}
