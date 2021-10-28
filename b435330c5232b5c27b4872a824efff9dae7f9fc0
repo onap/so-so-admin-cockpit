@@ -22,6 +22,30 @@
       "revId": "b435330c5232b5c27b4872a824efff9dae7f9fc0",
       "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0bb87e94_87288656",
+        "filename": "so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-service/src/main/java/org/onap/so/monitoring/rest/api/SoMonitoringController.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 6073
+      },
+      "writtenOn": "2021-10-28T08:01:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8f8ff8f2_c98285fc",
+      "range": {
+        "startLine": 664,
+        "startChar": 0,
+        "endLine": 664,
+        "endChar": 3
+      },
+      "revId": "b435330c5232b5c27b4872a824efff9dae7f9fc0",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
     }
   ]
 }
