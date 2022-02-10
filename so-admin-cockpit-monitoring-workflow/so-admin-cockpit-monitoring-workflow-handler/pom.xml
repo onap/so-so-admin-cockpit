@@ -63,6 +63,10 @@
                     <groupId>org.apache.tomcat</groupId>
                     <artifactId>tomcat-catalina</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
     </dependencies>
