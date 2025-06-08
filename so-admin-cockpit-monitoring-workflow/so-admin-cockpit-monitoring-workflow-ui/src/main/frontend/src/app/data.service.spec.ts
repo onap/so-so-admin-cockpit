@@ -53,7 +53,7 @@ describe('DataService', () => {
   it('test getBpmnInfraRequest POST request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
     (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
       service.getBpmnInfraRequest({}, 1, 2).subscribe(data => { });
-      var url = environment.soMonitoringBackendURL + 'v1/search?from=1&to=2';
+      var url = environment.soMonitoringBackendURL + '/v1/search?from=1&to=2';
       const mockReq = httpClient.expectOne(url);
       expect(mockReq.request.method).toEqual('POST');
       mockReq.flush({});
@@ -63,7 +63,7 @@ describe('DataService', () => {
   it('test getProcessInstanceId GET request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
     (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
       service.getProcessInstanceId("").subscribe(data => { });
-      var url = environment.soMonitoringBackendURL + 'process-instance-id/' + "";
+      var url = environment.soMonitoringBackendURL + '/process-instance-id/' + "";
       const mockReq = httpClient.expectOne(url);
       expect(mockReq.request.method).toEqual('GET');
       mockReq.flush({});
@@ -73,7 +73,7 @@ describe('DataService', () => {
   it('test getActivityInstance GET request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
     (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
       service.getActivityInstance("").then(data => { });
-      var url = environment.soMonitoringBackendURL + 'activity-instance/' + "";
+      var url = environment.soMonitoringBackendURL + '/activity-instance/' + "";
       const mockReq = httpClient.expectOne(url);
       expect(mockReq.request.method).toEqual('GET');
       mockReq.flush({});
@@ -83,7 +83,7 @@ describe('DataService', () => {
   it('test getProcessInstance GET request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
     (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
       service.getProcessInstance("");
-      var url = environment.soMonitoringBackendURL + 'process-instance/' + "";
+      var url = environment.soMonitoringBackendURL + '/process-instance/' + "";
       const mockReq = httpClient.expectOne(url);
       expect(mockReq.request.method).toEqual('GET');
     })));
@@ -92,7 +92,7 @@ describe('DataService', () => {
   it('test getProcessDefinition GET request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
     (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
       service.getProcessDefinition("").subscribe(data => { });
-      var url = environment.soMonitoringBackendURL + 'process-definition/' + "";
+      var url = environment.soMonitoringBackendURL + '/process-definition/' + "";
       const mockReq = httpClient.expectOne(url);
       expect(mockReq.request.method).toEqual('GET');
       mockReq.flush({});
@@ -102,7 +102,7 @@ describe('DataService', () => {
   it('test getVariableInstance GET request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
     (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
       service.getVariableInstance("").subscribe(data => { });
-      var url = environment.soMonitoringBackendURL + 'variable-instance/' + "";
+      var url = environment.soMonitoringBackendURL + '/variable-instance/' + "";
       const mockReq = httpClient.expectOne(url);
       expect(mockReq.request.method).toEqual('GET');
       mockReq.flush({});
