@@ -3,12 +3,12 @@
   <parent>
     <groupId>org.onap.so.so-admin-cockpit</groupId>
     <artifactId>so-admin-cockpit</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.10.1-SNAPSHOT</version>
   </parent>
   <artifactId>packages</artifactId>
   <packaging>pom</packaging>
   <name>SO Admin Cockpit Packages</name>
-  
+
   <profiles>
         <!-- DO NOT CHANGE THE *ORDER* IN WHICH THESE PROFILES ARE DEFINED! -->
 
