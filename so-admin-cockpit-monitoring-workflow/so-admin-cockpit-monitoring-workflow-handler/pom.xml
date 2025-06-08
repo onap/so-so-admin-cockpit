@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.onap.so.so-admin-cockpit.monitoring.workflow</groupId>
         <artifactId>so-admin-cockpit-monitoring-workflow</artifactId>
-        <version>1.9.0-SNAPSHOT</version>
+        <version>1.10.1-SNAPSHOT</version>
     </parent>
     <artifactId>so-admin-cockpit-monitoring-workflow-handler</artifactId>
     <name>SO Admin Cockpit Monitoring Workflow Handler</name>
