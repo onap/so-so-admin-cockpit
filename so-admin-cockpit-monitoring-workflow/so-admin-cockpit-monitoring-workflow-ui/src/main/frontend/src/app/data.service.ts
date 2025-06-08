@@ -42,7 +42,7 @@ export class DataService {
 
   // HTTP POST call to running Spring Boot application
   getBpmnInfraRequest(servInstId: {}, from: number, to: number): Observable<BpmnInfraRequest[]> {
-    var url = environment.soMonitoringBackendURL + 'v1/search?from=' + from + "&to=" + to;
+    var url = environment.soMonitoringBackendURL + '/v1/search?from=' + from + "&to=" + to;
     return this.http.post<BpmnInfraRequest[]>(url, servInstId)
       .pipe(
         catchError(this.httpErrorHandlerService.handleError("POST", url))
@@ -51,7 +51,7 @@ export class DataService {
 
   // HTTP GET to return Process Instance using RequestID
   getProcessInstanceId(requestId: string): Observable<HttpResponse<ProcessInstanceId>> {
-    var url = environment.soMonitoringBackendURL + 'process-instance-id/' + requestId;
+    var url = environment.soMonitoringBackendURL + '/process-instance-id/' + requestId;
     console.log(requestId);
     return this.http.get<ProcessInstanceId>(url, { observe: 'response' })
       .pipe(
@@ -61,7 +61,7 @@ export class DataService {
 
   // HTTP GET to return Activity instancs using ProcessInstanceID
   getActivityInstance(processInstanceId: string): Promise<ActivityInstance[]> {
-    var url = environment.soMonitoringBackendURL + 'activity-instance/' + processInstanceId;
+    var url = environment.soMonitoringBackendURL + '/activity-instance/' + processInstanceId;
     return this.http.get<ActivityInstance[]>(url)
       .pipe(
         catchError(this.httpErrorHandlerService.handleError("GET", url))
@@ -70,7 +70,7 @@ export class DataService {
 
   // HTTP GET to return Activity Instance using ProcessInstanceID
   async getProcessInstance(processInstanceId: string): Promise<ProcessInstanceDetail> {
-    var url = environment.soMonitoringBackendURL + 'process-instance/' + processInstanceId;
+    var url = environment.soMonitoringBackendURL + '/process-instance/' + processInstanceId;
     return await (this.http.get<ProcessInstanceDetail>(url)
       .pipe(
         catchError(this.httpErrorHandlerService.handleError("GET", url))))
@@ -79,7 +79,7 @@ export class DataService {
 
   // HTTP GET to return Process Definition using processDefinitionId
   getProcessDefinition(processDefinitionId: string): Observable<Object> {
-    var url = environment.soMonitoringBackendURL + 'process-definition/' + processDefinitionId;
+    var url = environment.soMonitoringBackendURL + '/process-definition/' + processDefinitionId;
     return this.http.get(url).pipe(
       catchError(this.httpErrorHandlerService.handleError("GET", url))
     );
@@ -87,14 +87,14 @@ export class DataService {
 
   // HTTP GET to return Variable Instance using ProcessInstanceID
   getVariableInstance(processDefinitionId: string): Observable<Object> {
-    var url = environment.soMonitoringBackendURL + 'variable-instance/' + processDefinitionId;
+    var url = environment.soMonitoringBackendURL + '/variable-instance/' + processDefinitionId;
     return this.http.get(url).pipe(
       catchError(this.httpErrorHandlerService.handleError("GET", url))
     );
   }
 
   onboardBPMNInfra(formData: any): Observable<Object> {
-    var url = environment.soMonitoringBackendURL + 'workflowPackages/onboard';
+    var url = environment.soMonitoringBackendURL + '/workflowPackages/onboard';
     return this.http.post<any>(url, formData)
       .pipe(
         catchError(this.httpErrorHandlerService.handleError("POST", url))
@@ -107,7 +107,7 @@ export class DataService {
         'Content-Type':  'application/json',
       })
     };
-    var url = environment.soMonitoringBackendURL + 'serviceRecipes';
+    var url = environment.soMonitoringBackendURL + '/serviceRecipes';
     return this.http.post<any>(url, data, this.httpOptions)
       .pipe(
         catchError(this.httpErrorHandlerService.handleError("POST", url))
@@ -120,7 +120,7 @@ export class DataService {
          'Content-Type':  'application/json',
        })
      };
-     var url = environment.soMonitoringBackendURL + 'serviceRecipes';
+     var url = environment.soMonitoringBackendURL + '/serviceRecipes';
      return this.http.get<any>(url, this.httpOptions)
        .pipe(
          catchError(this.httpErrorHandlerService.handleError("GET", url))
@@ -133,7 +133,7 @@ export class DataService {
          'Content-Type':  'application/json',
        })
      };
-     var url = environment.soMonitoringBackendURL + 'networkRecipes';
+     var url = environment.soMonitoringBackendURL + '/networkRecipes';
      return this.http.get<any>(url, this.httpOptions)
        .pipe(
          catchError(this.httpErrorHandlerService.handleError("GET", url))
@@ -146,7 +146,7 @@ export class DataService {
          'Content-Type':  'application/json',
        })
      };
-     var url = environment.soMonitoringBackendURL + 'vnfRecipes';
+     var url = environment.soMonitoringBackendURL + '/vnfRecipes';
      return this.http.get<any>(url, this.httpOptions)
        .pipe(
          catchError(this.httpErrorHandlerService.handleError("GET", url))
