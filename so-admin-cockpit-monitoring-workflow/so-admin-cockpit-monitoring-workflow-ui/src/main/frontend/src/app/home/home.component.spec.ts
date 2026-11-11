@@ -1,6 +1,6 @@
 /**
 ============LICENSE_START=======================================================
- Copyright (C) 2018 Ericsson. All rights reserved.
+ Copyright (C) 2026 Deutsche Telekom AG. All rights reserved.
 ================================================================================
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,162 +17,187 @@ See the License for the specific language governing permissions and
 SPDX-License-Identifier: Apache-2.0
 ============LICENSE_END=========================================================
 
-@authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com, andrei.barcovschi@ericsson.com
 */
 
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-
+import {
+  TestBed,
+  ComponentFixture,
+  fakeAsync,
+  tick
+} from '@angular/core/testing';
 import { HomeComponent } from './home.component';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { MatTableModule, MatNativeDateModule, MatTableDataSource, MatPaginatorModule } from '@angular/material';
-import { FormsModule } from '@angular/forms';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { HttpClientModule } from '@angular/common/http';
-import { HttpClient } from '@angular/common/http';
-import { inject } from '@angular/core/testing';
-import { RouterModule } from '@angular/router';
-import { APP_BASE_HREF } from '@angular/common';
+import { DataService } from '../data.service';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
-import { environment } from '../../environments/environment.prod';
-import { Observable, of, throwError } from 'rxjs';
-import { SearchRequest } from '../model/SearchRequest.model';
-import { DataService } from '../data.service'; // may be able to remove
-import { BpmnInfraRequest } from '../model/bpmnInfraRequest.model';
-import { By } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ProcessInstanceId } from '../model/processInstanceId.model';
-import { HttpResponse } from '@angular/common/http';
+import { NgxSpinnerService } from 'ngx-spinner';
 import { Router } from '@angular/router';
-import { Routes } from '@angular/router';
-import { RouterTestingModule } from '@angular/router/testing';
-import { DetailsComponent } from '../details/details.component';
-
-// Generate stub for toastr popup notifications
-class StubbedToastrNotificationService extends ToastrNotificationService {
-  toastrSettings() {}
-  info() {}
-  error() {}
-}
-
-const routes: Routes = [ { path: 'details/114e9ae4-4a32-11e9-8646-d663bd873d93' , component: DetailsComponent} ]
-
-describe('HomeComponent', () => {
-  let spyDataService: jasmine.SpyObj<DataService>;
-  let router: Router;
-  let component: HomeComponent;
-  let fixture: ComponentFixture<HomeComponent>;
-
+import { of, throwError } from 'rxjs';
+import { HttpResponse } from '@angular/common/http';
+import {
+  componentImports,
+  notificationStub,
+  spinnerStub
+} from '../testing/component-test';
+import { request } from '../testing/api-fixtures';
+describe('Search workflow', () => {
+  let fixture: ComponentFixture<HomeComponent>,
+    component: HomeComponent,
+    api: any,
+    popup: any,
+    spinner: any,
+    router: Router;
   beforeEach(() => {
-    spyDataService = jasmine.createSpyObj('DataService', ['getBpmnInfraRequest', 'getProcessInstanceId']);
-
+    api = jasmine.createSpyObj('api', [
+      'getBpmnInfraRequest',
+      'getProcessInstanceId'
+    ]);
+    popup = notificationStub();
+    spinner = spinnerStub();
     TestBed.configureTestingModule({
+      imports: componentImports,
+      declarations: [HomeComponent],
       providers: [
-        { provide: DataService, useValue: spyDataService },
-        { provide: APP_BASE_HREF, useValue: '/' },
-        { provide: ToastrNotificationService, useClass: StubbedToastrNotificationService }],
-      imports: [MatPaginatorModule, BrowserAnimationsModule, MatTableModule, FormsModule, MatDatepickerModule, MatNativeDateModule, HttpClientModule, RouterTestingModule.withRoutes(routes)],
-      declarations: [HomeComponent, DetailsComponent],
-      schemas: [
-        CUSTOM_ELEMENTS_SCHEMA
+        { provide: DataService, useValue: api },
+        { provide: ToastrNotificationService, useValue: popup },
+        { provide: NgxSpinnerService, useValue: spinner }
       ]
     });
-
     fixture = TestBed.createComponent(HomeComponent);
-    router = TestBed.get(Router);
     component = fixture.componentInstance;
+    router = TestBed.get(Router);
+    spyOn(router, 'navigate');
     fixture.detectChanges();
   });
-
-  // Ensure creation of HomeComponent component
-  it('component should be created', () => {
-    expect(component).toBeTruthy();
-  });
-
-  // Ensure all statistic variables are initialised to zero
-  it('should ensure statistic variables are defaulted at zero', () => {
-    expect(component.totalVal === 0 && component.completeVal === 0 &&
-      component.inProgressVal === 0 && component.failedVal === 0 &&
-      component.pendingVal === 0 && component.unlockedVal === 0 &&
-      component.percentageComplete === 0 && component.percentageFailed === 0 &&
-      component.percentageInProg === 0 && component.percentagePending === 0 &&
-      component.percentageUnlocked === 0).toBeTruthy();
-  });
-
-  it('should should navigate to a process if response status is OK', async(() => {
-      spyDataService.getProcessInstanceId.and.returnValue(of(<HttpResponse<ProcessInstanceId>>{body: {processInstanceId: '114e9ae4-4a32-11e9-8646-d663bd873d93'}, status: 200}));
-      spyOn(router, 'navigate');
-      component.getProcessInstanceId('e8a75940-4a32-11e9-8646-d663bd873d93');
-
-      fixture.whenStable().then(() => {
-        expect(router.navigate).toHaveBeenCalledWith(['/details/114e9ae4-4a32-11e9-8646-d663bd873d93']);
-      });
-    }));
-
-  it('should handle error if no process instance id found', () => {
-    spyDataService.getProcessInstanceId.and.returnValue(of(<HttpResponse<ProcessInstanceId>>{body: {processInstanceId: 'getProcessInstanceId error not found'}, status: 404}));
-    component.getProcessInstanceId('e8a75940-4a32-11e9-8646-d663bd873d93');
-  });
-
-  it('should handle error when searchData.getSearchRequest returns an error', () => {
-      spyOn(component.searchData, 'getSearchRequest').and.callFake(() => {
-        return throwError(new Error('getSearchRequest error'));
-      });
-      component.makeCall();
-  });
-
-  it('should handle error when dataService.getBpmnInfraRequest returns an error', () => {
-      spyOn(component.searchData, 'getSearchRequest').and.returnValue(of(getSearchRequest("965d3c92-44e0-11e9-b210-d663bd873d93", "85a7c354-44e0-11e9-b210-d663bd873d93", undefined, undefined, undefined, undefined, undefined, undefined, "ALL")));
-      spyDataService.getBpmnInfraRequest.and.callFake(() => {
-        return throwError(new Error('getBpmnInfraRequest error'));
-      });
-      component.makeCall();
-  });
-
-  it('should calculate statistics correctly', async(() => {
-    let requestStatusTypes: string[] = ["COMPLETE", "IN_PROGRESS", "FAILED", "PENDING", "UNLOCKED"];
-    let processArr: BpmnInfraRequest[] = [];
-
-    // create 5 processes, one of each requestStatusType, with default time.
-    requestStatusTypes.forEach((status) => {
-      let serviceName = "service-" + status;
-      var process = getProcess("85a7c354-44e0-11e9-b210-d663bd873d93", "965d3c92-44e0-11e9-b210-d663bd873d93", serviceName, "048a6212-44e1-11e9-b210-d663bd873d93", status, "TestType", undefined, undefined);
-      processArr.push(process);
-    })
-
-      // search request has default filter.
-      spyOn(component.searchData, 'getSearchRequest').and.returnValue(of(getSearchRequest(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, "ALL")));
-      spyDataService.getBpmnInfraRequest.and.returnValue(of(processArr));
-      component.makeCall();
-
-      fixture.whenStable().then(() => {
-        fixture.detectChanges();
-
-        expect(
-          component.totalVal === 5 && component.completeVal === 1 &&
-          component.inProgressVal === 1 && component.failedVal === 1 &&
-          component.pendingVal === 1 && component.unlockedVal === 1 &&
-          component.percentageComplete === 20 &&
-          component.percentageFailed === 20 &&
-          component.percentageInProg === 20 &&
-          component.percentagePending === 20 &&
-          component.percentageUnlocked === 20)
-          .toBeTruthy();
-      });
-    }));
-
-  function getSearchRequest(selectedValueSII = "EQ", serviceInstanceIdVal: string, selectedValueRI = "EQ", requestIdVal: string, selectedValueSN = "EQ", serviceInstanceNameVal: string, startTimeInMilliseconds = 0, endTimeInMilliseconds = 4, selectedValueSTATUS?: string): SearchRequest {
-    if (startTimeInMilliseconds > endTimeInMilliseconds) {
-      console.error("End time cannot be greater than start time.");
-      return undefined;
-    }
-    if (typeof selectedValueSTATUS === "string")
-      return new SearchRequest({ serviceInstanceId: [selectedValueSII, serviceInstanceIdVal], requestId: [selectedValueRI, requestIdVal], serviceInstanceName: [selectedValueSN, serviceInstanceNameVal], requestStatus: ["EQ", selectedValueSTATUS] }, startTimeInMilliseconds, endTimeInMilliseconds);
-    else
-      return new SearchRequest({ serviceInstanceId: [selectedValueSII, serviceInstanceIdVal], requestId: [selectedValueRI, requestIdVal], serviceInstanceName: [selectedValueSN, serviceInstanceNameVal] }, startTimeInMilliseconds, endTimeInMilliseconds);
+  function search(rows: any[]) {
+    api.getBpmnInfraRequest.and.returnValue(of(rows));
+    component.makeCall();
+    fixture.detectChanges();
   }
-
-  function getProcess(requestIdVal: string, serviceInstanceIdVal: string, serviceInstanceNameVal: string, networkIdVal: string, requestStatusVal: string, serviceTypeVal: string, startTimeVal = "1", endTimeVal = "2"): BpmnInfraRequest {
-    return <BpmnInfraRequest>{ requestId: requestIdVal, serviceInstanceId: serviceInstanceIdVal, serviceInstanceName: serviceInstanceNameVal, networkId: networkIdVal, requestStatus: requestStatusVal, serviceType: serviceTypeVal, startTime: startTimeVal, endTime: endTimeVal };
-  }
+  it('submits an entered request criterion and renders returned rows', fakeAsync(() => {
+    const input = fixture.nativeElement.querySelector(
+      'input[placeholder="Request Id"]'
+    );
+    input.value = 'request-1';
+    input.dispatchEvent(new Event('input'));
+    tick();
+    api.getBpmnInfraRequest.and.returnValue(of([request]));
+    fixture.nativeElement.querySelector('button.fa-search').click();
+    tick();
+    fixture.detectChanges();
+    expect(api.getBpmnInfraRequest.calls.mostRecent().args[0]).toEqual({
+      requestId: ['EQ', 'request-1']
+    });
+    expect(fixture.nativeElement.textContent).toContain('Demo service');
+    expect(spinner.hide).toHaveBeenCalled();
+  }));
+  it('counts each status and rounds percentages with unknown statuses in the denominator', () => {
+    search(
+      [
+        'COMPLETE',
+        'IN_PROGRESS',
+        'FAILED',
+        'PENDING',
+        'UNLOCKED',
+        'UNKNOWN'
+      ].map((requestStatus) => Object.assign({}, request, { requestStatus }))
+    );
+    expect([
+      component.completeVal,
+      component.inProgressVal,
+      component.failedVal,
+      component.pendingVal,
+      component.unlockedVal
+    ]).toEqual([1, 1, 1, 1, 1]);
+    expect(component.totalVal).toBe(6);
+    expect([
+      component.percentageComplete,
+      component.percentageInProg,
+      component.percentageFailed,
+      component.percentagePending,
+      component.percentageUnlocked
+    ]).toEqual([16.67, 16.67, 16.67, 16.67, 16.67]);
+  });
+  it('clears rows, totals and percentages after a subsequent empty result', () => {
+    search([request]);
+    search([]);
+    expect(component.totalVal).toBe(0);
+    expect(component.processData.data).toEqual([]);
+    expect([
+      component.percentageComplete,
+      component.percentageInProg,
+      component.percentageFailed,
+      component.percentagePending,
+      component.percentageUnlocked
+    ]).toEqual([0, 0, 0, 0, 0]);
+    expect(fixture.nativeElement.textContent).not.toContain('Demo service');
+  });
+  it('rejects invalid dates without calling the API and stops loading', () => {
+    component.searchData.startDate = null;
+    component.makeCall();
+    expect(api.getBpmnInfraRequest).not.toHaveBeenCalled();
+    expect(popup.error).toHaveBeenCalled();
+    expect(spinner.hide).toHaveBeenCalled();
+  });
+  it('shows a search failure and stops loading', () => {
+    api.getBpmnInfraRequest.and.returnValue(throwError({ status: 500 }));
+    component.makeCall();
+    expect(popup.error).toHaveBeenCalledWith(
+      jasmine.stringMatching('Unable to perform search')
+    );
+    expect(spinner.hide).toHaveBeenCalled();
+  });
+  it('navigates using a successful lookup response', () => {
+    api.getProcessInstanceId.and.returnValue(
+      of(new HttpResponse({ body: { processInstanceId: 'process-1' } }))
+    );
+    component.getProcessInstanceId('request-1');
+    expect(router.navigate).toHaveBeenCalledWith(['/details/process-1']);
+    expect(spinner.hide).toHaveBeenCalled();
+  });
+  it('reports a genuine HTTP lookup failure without navigation or stuck loading', () => {
+    api.getProcessInstanceId.and.returnValue(
+      throwError({ message: 'missing' })
+    );
+    component.getProcessInstanceId('request-1');
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(popup.error).toHaveBeenCalledWith(
+      jasmine.stringMatching('No process instance')
+    );
+    expect(spinner.hide).toHaveBeenCalled();
+  });
+  it('reports an unsuccessful lookup response without navigation', () => {
+    api.getProcessInstanceId.and.returnValue(
+      of(new HttpResponse({ status: 404 }))
+    );
+    component.getProcessInstanceId('missing');
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(popup.error).toHaveBeenCalled();
+    expect(spinner.hide).toHaveBeenCalled();
+  });
+  it('sorts and pages the rendered result set', fakeAsync(() => {
+    search(
+      Array.from({ length: 12 }, (_, i) =>
+        Object.assign({}, request, {
+          requestId: 'request-' + i,
+          serviceInstanceName: 'Service ' + i
+        })
+      )
+    );
+    tick();
+    fixture.detectChanges();
+    const next = fixture.nativeElement.querySelector(
+      'button[aria-label="Next page"]'
+    );
+    expect(next.disabled).toBe(false);
+    next.click();
+    tick();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('mat-row').length).toBe(2);
+    expect(fixture.nativeElement.textContent).toContain('Service 10');
+    expect(fixture.nativeElement.textContent).not.toContain('Service 0');
+    fixture.nativeElement.querySelector('[mat-sort-header]').click();
+    tick();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Service 8');
+    expect(fixture.nativeElement.textContent).not.toContain('Service 10');
+  }));
 });

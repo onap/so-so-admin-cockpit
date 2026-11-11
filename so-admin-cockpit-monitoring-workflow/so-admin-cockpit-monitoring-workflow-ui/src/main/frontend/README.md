@@ -1,27 +1,25 @@
-# ONAPSOMonitor
+# SO Admin Cockpit frontend
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 6.0.8.
+The application builds with Node **10.19.0** and Yarn **1.7.0**, installed by Maven in the UI module's `target/node/`. Angular 6 and TypeScript 2.7 are retained. `yarn.lock` is the authoritative application lockfile.
 
-## Development server
+```sh
+yarn install --frozen-lockfile
+yarn test:ci
+yarn build
+```
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+Set `CHROME_BIN` to an installed Chrome/Chromium executable if it is not on PATH. `yarn test` runs the interactive Karma watcher; use Jasmine's `fit`/`fdescribe` temporarily for focused development and restore them before review. The CI command performs one headless run and fails for failed assertions or coverage regressions.
 
-## Code scaffolding
+Unit/component tests use real templates, Angular HTTP testing and controlled service/BPMN boundaries. They cover search filters and statistics, HTTP bodies/errors, detail navigation and viewer lifecycle, uploads, and all recipe form modes. Always flush HTTP requests; teardown verifies there are none outstanding. Await asynchronous work rather than ignoring error emissions.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Reports: `test-results/unit/junit.xml`, `coverage/index.html`, `coverage/lcov.info` and `coverage/coverage-summary.json`. All application sources are loaded for coverage; only test helpers, tests, bootstrap/polyfill and environment files are excluded. Karma holds per-file coverage floors at the measured baseline rounded down; raise them as tests improve and review any reduction.
 
-## Build
+From the repository root with Java 17:
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+```sh
+mvn -pl so-admin-cockpit-monitoring-workflow/so-admin-cockpit-monitoring-workflow-ui -am test
+```
 
-## Running unit tests
+Maven runs `test:ci` in the test phase. `-DskipTests` skips execution; `-DskipFrontendTests=true` delegates it to the browser CI job. A frozen install and production build still run.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+Browser regression and packaged-application smoke tests are a separate package at `../../../browser-tests`. Switch to Node 22 there and follow its README; Protractor has been retired. Do not run modern browser tooling under the legacy application's Node runtime.

@@ -139,7 +139,8 @@ export class OnboardComponent implements OnInit {
     this.fileList = [];
     if(evt) {
       let file = evt.currentTarget.files[0];
-      if(file.name.includes(".war")) {
+      if (!file) { return false; }
+      if(file.name.endsWith(".war")) {
         this.fileList = this.fileList.concat(file);
       } else {
         this.popup.error("Invalid file format.");

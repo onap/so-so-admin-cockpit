@@ -20,7 +20,8 @@ SPDX-License-Identifier: Apache-2.0
 @authors: ronan.kenny@est.tech, waqas.ikram@est.tech
 */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { DataService } from '../data.service';
 import { ActivatedRoute, Router } from "@angular/router";
 import { BpmnInfraRequest } from '../model/bpmnInfraRequest.model';
@@ -28,7 +29,8 @@ import { ActivityInstance } from '../model/activityInstance.model';
 import { ProcessInstanceDetail } from '../model/processInstance.model';
 import { ProcessDefinitionDetail } from '../model/processDefinition.model';
 import { CommonModule } from '@angular/common';
-import Viewer from 'bpmn-js/lib/NavigatedViewer';
+// Angular 6's build optimizer strips inheritance from the unbundled viewer.
+import Viewer from 'bpmn-js/dist/bpmn-navigated-viewer.production.min.js';
 import { ViewEncapsulation } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { VariableInstance } from '../model/variableInstance.model';
@@ -43,7 +45,10 @@ import { ElementRef, ViewChild } from '@angular/core';
   encapsulation: ViewEncapsulation.None
 })
 
-export class DetailsComponent implements OnInit {
+export class DetailsComponent implements OnInit, OnDestroy {
+
+  private routeSubscription: Subscription;
+  private activeLoad = 0;
 
   @ViewChild("canvas") elementReference: ElementRef;
 
@@ -55,7 +60,7 @@ export class DetailsComponent implements OnInit {
 
   processDefinitionName: string;
 
-  activityInstance: ActivityInstance[];
+  activityInstance: ActivityInstance[] = [];
 
   processInstance: ProcessInstanceDetail;
 
@@ -71,39 +76,52 @@ export class DetailsComponent implements OnInit {
     private router: Router, private spinner: NgxSpinnerService) { }
 
   async getActivityInstance(procInstId: string) {
+    const load = this.activeLoad;
     await this.data.getActivityInstance(procInstId).then(
       (data: ActivityInstance[]) => {
+        if (load !== this.activeLoad) { return; }
         this.activityInstance = data;
         console.log(data);
       }, error => {
+        if (load !== this.activeLoad) { return; }
+        this.spinner.hide();
         console.log(error);
         this.popup.error("Unable to get activity instance details for id: " + procInstId + " Error code:" + error.status);
       });
   }
 
   async getProcessDefinition(procDefId: string) {
+    const load = this.activeLoad;
     await this.data.getProcessDefinition(procDefId).subscribe(
       async (data: ProcessDefinitionDetail) => {
+        if (load !== this.activeLoad) { return; }
         this.processDefinition = data;
         console.log(data);
         await this.displayCamundaflow(this.processDefinition.processDefinitionXml, this.activityInstance,
           this.router, this.spinner, this.popup);
       }, error => {
+        if (load !== this.activeLoad) { return; }
+        this.spinner.hide();
         console.log(error);
         this.popup.error("Unable to get process definition for id: " + procDefId + " Error code:" + error.status);
       });
   }
 
   async getProcInstance(procInstId: string) {
+    const load = this.activeLoad;
     await this.data.getProcessInstance(procInstId).then(
       async (data: ProcessInstanceDetail) => {
+        if (load !== this.activeLoad) { return; }
         this.processInstance = data;
         this.processDefinitionID = this.processInstance.processDefinitionId;
         this.processDefinitionName = this.processInstance.processDefinitionName;
         console.log("Process definition id: " + this.processDefinitionID);
-        await this.getActivityInstance(this.processInstanceID);
+        await this.getActivityInstance(procInstId);
+        if (load !== this.activeLoad) { return; }
         await this.getProcessDefinition(this.processDefinitionID);
       }, error => {
+        if (load !== this.activeLoad) { return; }
+        this.spinner.hide();
         console.log(error);
         this.popup.error("Unable to get process instance for id: " + procInstId + " Error code:" + error.status);
       });
@@ -112,8 +130,10 @@ export class DetailsComponent implements OnInit {
   displayCamundaflow(bpmnXml, activities: ActivityInstance[], router: Router,
     spinner: NgxSpinnerService, popup: ToastrNotificationService) {
     spinner.show();
+    const load = this.activeLoad;
 
     this.bpmnViewer.importXML(bpmnXml, (error) => {
+      if (load !== this.activeLoad) { return; }
       if (error) {
         console.error('Unable to load BPMN flow ', error);
         popup.error('Unable to load BPMN flow ');
@@ -125,8 +145,8 @@ export class DetailsComponent implements OnInit {
         var elementRegistry = this.bpmnViewer.get('elementRegistry');
         var overlays = this.bpmnViewer.get('overlays');
 
-        activities.forEach(a => {
-          if (a.calledProcessInstanceId !== null) {
+        activities.filter(a => elementRegistry.get(a.activityId)).forEach(a => {
+          if (a.calledProcessInstanceId) {
             var element = elementRegistry.get(a.activityId);
             let newNode = document.createElement('div');
             newNode.className = 'highlight-overlay';
@@ -157,7 +177,9 @@ export class DetailsComponent implements OnInit {
         // zoom to fit full viewport
         canvas.zoom('fit-viewport', 'auto');
         activities.forEach(a => {
-          canvas.addMarker(a.activityId, 'highlight');
+          if (elementRegistry.get(a.activityId)) {
+            canvas.addMarker(a.activityId, 'highlight');
+          }
         });
       }
     });
@@ -184,8 +206,10 @@ export class DetailsComponent implements OnInit {
   }
 
   getVarInst(procInstId: string) {
+    const load = this.activeLoad;
     this.data.getVariableInstance(procInstId).subscribe(
       (data: VariableInstance[]) => {
+        if (load !== this.activeLoad) { return; }
         this.variableInstance = [];
         for (let i = 0; i < data.length; i++) {
           var value = data[i]['value'];
@@ -202,21 +226,34 @@ export class DetailsComponent implements OnInit {
         }
         console.log(data);
       }, error => {
+        if (load !== this.activeLoad) { return; }
+        this.spinner.hide();
         console.log(error);
         this.popup.error("Unable to get Variable instances for id: " + procInstId + " Error code:" + error.status);
       });
   }
 
+  ngOnDestroy() {
+    this.activeLoad++;
+    this.spinner.hide();
+    if (this.routeSubscription) { this.routeSubscription.unsubscribe(); }
+    if (this.bpmnViewer) { this.bpmnViewer.destroy(); }
+  }
+
+  createViewer() {
+    return new Viewer({ container: '.canvas' });
+  }
+
   async ngOnInit() {
-    this.bpmnViewer = new Viewer({
-      container: '.canvas'
-    });
-    this.route.params.subscribe(
+    this.bpmnViewer = this.createViewer();
+    this.routeSubscription = this.route.params.subscribe(
       async params => {
+        const load = ++this.activeLoad;
+        this.activityInstance = [];
         this.processInstanceID = params.id as string;
         console.log("Will GET BpmnInfraRequest instance using id: " + this.processInstanceID);
         await this.getProcInstance(this.processInstanceID);
-
+        if (load !== this.activeLoad) { return; }
         this.getVarInst(this.processInstanceID);
       });
   }

@@ -101,6 +101,7 @@ export class HomeComponent {
           this.totalVal = processData.length;
 
           // Calculate percentages to 2 decimal places and compare to 0 to avoid NaN error
+          this.percentageComplete = this.percentageFailed = this.percentageInProg = this.percentagePending = this.percentageUnlocked = 0;
           if (this.totalVal != 0) {
             this.percentageComplete = Math.round(((this.completeVal / this.totalVal) * 100) * 100) / 100;
             this.percentageFailed = Math.round(((this.failedVal / this.totalVal) * 100) * 100) / 100;
@@ -135,6 +136,9 @@ export class HomeComponent {
         this.spinner.hide();
         console.log('No process instance id found: ' + requestId);
       }
+    }, error => {
+      this.popup.error('No process instance id found: ' + requestId);
+      this.spinner.hide();
     });
   }
 }

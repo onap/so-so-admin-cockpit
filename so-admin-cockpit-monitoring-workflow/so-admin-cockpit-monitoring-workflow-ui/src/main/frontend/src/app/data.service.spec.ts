@@ -1,6 +1,6 @@
 /**
 ============LICENSE_START=======================================================
- Copyright (C) 2018 Ericsson. All rights reserved.
+ Copyright (C) 2026 Deutsche Telekom AG. All rights reserved.
 ================================================================================
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,94 +17,149 @@ See the License for the specific language governing permissions and
 SPDX-License-Identifier: Apache-2.0
 ============LICENSE_END=========================================================
 
-@authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com
 */
 
-import { TestBed, inject } from '@angular/core/testing';
-
+import { TestBed } from '@angular/core/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController
+} from '@angular/common/http/testing';
 import { DataService } from './data.service';
-import { HttpClient } from '@angular/common/http';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { async } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
 import { ToastrNotificationService } from './toastr-notification-service.service';
 import { environment } from '../environments/environment';
-
-class StubbedToastrNotificationService extends ToastrNotificationService {
-  toastrSettings() {
-  }
-}
-
-describe('DataService', () => {
+import { notificationStub } from './testing/component-test';
+import { request, process, activity } from './testing/api-fixtures';
+describe('DataService HTTP contract', () => {
+  let service: DataService, http: HttpTestingController, popup: any;
+  const base = environment.soMonitoringBackendURL;
   beforeEach(() => {
+    popup = notificationStub();
     TestBed.configureTestingModule({
-      providers: [DataService, { provide: ToastrNotificationService, useClass: StubbedToastrNotificationService }],
-      imports: [HttpClientTestingModule]
+      imports: [HttpClientTestingModule],
+      providers: [
+        DataService,
+        { provide: ToastrNotificationService, useValue: popup }
+      ]
+    });
+    service = TestBed.get(DataService);
+    http = TestBed.get(HttpTestingController);
+  });
+  afterEach(() => http.verify());
+  it('posts filters and time bounds and returns search rows', () => {
+    const filters = { requestStatus: ['EQ', 'COMPLETE'] };
+    service
+      .getBpmnInfraRequest(filters, 100, 200)
+      .subscribe((rows) => expect(rows).toEqual([request]));
+    const req = http.expectOne(base + '/v1/search?from=100&to=200');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(filters);
+    req.flush([request]);
+  });
+  it('retains the lookup HTTP response and process ID', () => {
+    service.getProcessInstanceId('request-1').subscribe((r) => {
+      expect(r.status).toBe(200);
+      expect(r.body.processInstanceId).toBe('process-1');
+    });
+    const req = http.expectOne(base + '/process-instance-id/request-1');
+    expect(req.request.method).toBe('GET');
+    req.flush({ processInstanceId: 'process-1' });
+  });
+  [
+    ['getActivityInstance', 'activity-instance', [activity]],
+    ['getProcessInstance', 'process-instance', process]
+  ].forEach(([method, path, value]: any[]) => {
+    it('resolves ' + path + ' from its GET response', async () => {
+      const promise = service[method]('process-1');
+      const req = http.expectOne(base + '/' + path + '/process-1');
+      expect(req.request.method).toBe('GET');
+      req.flush(value);
+      expect(await promise).toEqual(value);
     });
   });
-
-  // Ensure creation of DataService component
-  it('component should be created', async(inject([HttpTestingController, DataService, ToastrNotificationService],
-    (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
-      expect(service).toBeTruthy();
-    })));
-
-  // Test getBpmnInfraRequest function making POST call
-  it('test getBpmnInfraRequest POST request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
-    (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
-      service.getBpmnInfraRequest({}, 1, 2).subscribe(data => { });
-      var url = environment.soMonitoringBackendURL + '/v1/search?from=1&to=2';
-      const mockReq = httpClient.expectOne(url);
-      expect(mockReq.request.method).toEqual('POST');
-      mockReq.flush({});
-    })));
-
-  // Test getProcessInstanceId function making GET request to retrieve processInstanceID
-  it('test getProcessInstanceId GET request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
-    (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
-      service.getProcessInstanceId("").subscribe(data => { });
-      var url = environment.soMonitoringBackendURL + '/process-instance-id/' + "";
-      const mockReq = httpClient.expectOne(url);
-      expect(mockReq.request.method).toEqual('GET');
-      mockReq.flush({});
-    })));
-
-  // Test getActivityInstance function making GET request to retrieve activityInstance
-  it('test getActivityInstance GET request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
-    (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
-      service.getActivityInstance("").then(data => { });
-      var url = environment.soMonitoringBackendURL + '/activity-instance/' + "";
-      const mockReq = httpClient.expectOne(url);
-      expect(mockReq.request.method).toEqual('GET');
-      mockReq.flush({});
-    })));
-
-  // Test getProcessInstance function making GET request to retrieve processInstance
-  it('test getProcessInstance GET request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
-    (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
-      service.getProcessInstance("");
-      var url = environment.soMonitoringBackendURL + '/process-instance/' + "";
-      const mockReq = httpClient.expectOne(url);
-      expect(mockReq.request.method).toEqual('GET');
-    })));
-
-  // Test getProcessDefinition function making GET request to retrieve processDefinition
-  it('test getProcessDefinition GET request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
-    (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
-      service.getProcessDefinition("").subscribe(data => { });
-      var url = environment.soMonitoringBackendURL + '/process-definition/' + "";
-      const mockReq = httpClient.expectOne(url);
-      expect(mockReq.request.method).toEqual('GET');
-      mockReq.flush({});
-    })));
-
-  // Test getVariableInstance function making GET request to retrieve variableInstance
-  it('test getVariableInstance GET request', async(inject([HttpTestingController, DataService, ToastrNotificationService],
-    (httpClient: HttpTestingController, service: DataService, toastr: ToastrNotificationService) => {
-      service.getVariableInstance("").subscribe(data => { });
-      var url = environment.soMonitoringBackendURL + '/variable-instance/' + "";
-      const mockReq = httpClient.expectOne(url);
-      expect(mockReq.request.method).toEqual('GET');
-      mockReq.flush({});
-    })));
+  [
+    [
+      'getProcessDefinition',
+      '/process-definition/id',
+      { processDefinitionXml: '<xml/>' },
+      'id'
+    ],
+    [
+      'getVariableInstance',
+      '/variable-instance/id',
+      [{ name: 'region', value: 'west' }],
+      'id'
+    ],
+    ['getServiceRecipe', '/serviceRecipes', { serviceRecipes: [] }],
+    ['getNetworkRecipe', '/networkRecipes', { networkRecipes: [] }],
+    ['getVnfRecipe', '/vnfRecipes', { vnfRecipes: [] }]
+  ].forEach(([method, path, value, id]: any[]) => {
+    it('returns ' + path + ' response without changing its shape', () => {
+      service[method](id).subscribe((data) => expect(data).toEqual(value));
+      const req = http.expectOne(base + path);
+      expect(req.request.method).toBe('GET');
+      req.flush(value);
+    });
+  });
+  it('sends multipart file without forcing a content boundary', () => {
+    const form = new FormData();
+    form.append('file', new File(['archive'], 'workflow.war'));
+    service
+      .onboardBPMNInfra(form)
+      .subscribe((data) => expect(data).toEqual({ result: 'true' }));
+    const req = http.expectOne(base + '/workflowPackages/onboard');
+    expect(req.request.method).toBe('POST');
+    expect((req.request.body.get('file') as File).name).toBe('workflow.war');
+    expect(req.request.headers.has('Content-Type')).toBe(false);
+    req.flush({ result: 'true' });
+  });
+  it('posts the recipe JSON exactly once', () => {
+    const body = JSON.stringify({
+      modelType: 'Service',
+      modelVersionId: 'uuid'
+    });
+    service
+      .saveServiceRecipe(body)
+      .subscribe((data) => expect(data).toEqual({ id: 1 }));
+    const req = http.expectOne(base + '/serviceRecipes');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toBe(body);
+    expect(req.request.headers.get('Content-Type')).toBe('application/json');
+    req.flush({ id: 1 });
+  });
+  [400, 404, 500].forEach((status) =>
+    it(
+      'propagates HTTP ' + status + ' body and notifies server failures',
+      () => {
+        const body = { message: 'failure' };
+        service.getVariableInstance('id').subscribe(
+          () => fail('expected failure'),
+          (error) => expect(error).toEqual(body)
+        );
+        http
+          .expectOne(base + '/variable-instance/id')
+          .flush(body, { status, statusText: 'Failure' });
+        expect(popup.error.calls.count()).toBe(status === 500 ? 1 : 0);
+      }
+    )
+  );
+  it('rejects a failed Promise request', async () => {
+    const promise = service.getProcessInstance('id').then(
+      () => fail('expected rejection'),
+      (e) => expect(e).toEqual({ message: 'missing' })
+    );
+    http
+      .expectOne(base + '/process-instance/id')
+      .flush({ message: 'missing' }, { status: 404, statusText: 'Not Found' });
+    await promise;
+  });
+  it('propagates network errors and notifies the user', () => {
+    service.getVariableInstance('id').subscribe(
+      () => fail('expected failure'),
+      (e) => expect(e).toContain('GET')
+    );
+    http
+      .expectOne(base + '/variable-instance/id')
+      .error(new ErrorEvent('network', { message: 'offline' }));
+    expect(popup.error).toHaveBeenCalledWith(jasmine.stringMatching('offline'));
+  });
 });

@@ -11,9 +11,10 @@
                 'has-danger': modelName.invalid && (modelName.dirty || modelName.touched),
                 'has-success': modelName.valid && (modelName.dirty || modelName.touched)
             }">
-                <label>Model Name</label>
+                <label for="recipe-modelName">Model Name</label>
                 <input type="text"
                     class="form-control"
+                    id="recipe-modelName"
                     formControlName="modelName"
                     required>
             </div>
@@ -23,9 +24,10 @@
                 'has-danger': modelName.invalid && (modelName.dirty || modelName.touched),
                 'has-success': modelName.valid && (modelName.dirty || modelName.touched)
             }">
-                <label>NF Role</label>
+                <label for="recipe-nfRole">NF Role</label>
                 <input type="text"
                     class="form-control"
+                    id="recipe-nfRole"
                     formControlName="nfRole"
                     required>
             </div>
@@ -34,10 +36,11 @@
                 'has-danger': modelVersionId.invalid && (modelVersionId.dirty || modelVersionId.touched),
                 'has-success': modelVersionId.valid && (modelVersionId.dirty || modelVersionId.touched)
             }">
-                <label>{{modeType == 'Service Recipe' ? 'Service Model UUID' : 'Model Versison ID'}}</label>
+                <label for="recipe-modelVersionId">{{modeType == 'Service Recipe' ? 'Service Model UUID' : 'Model Version ID'}}</label>
                 <input type="text"
                         class="form-control"
-                        formControlName="modelVersionId"
+                        id="recipe-modelVersionId"
+                    formControlName="modelVersionId"
                         required>
             </div>
             <div class="form-group"
@@ -45,9 +48,10 @@
                     'has-danger': operation.invalid && (operation.dirty || operation.touched),
                     'has-success': operation.valid && (operation.dirty || operation.touched)
             }">
-                <label>Action</label>
+                <label for="recipe-operation">Action</label>
                 <input type="operation"
                     class="form-control"
+                    id="recipe-operation"
                     formControlName="operation"
                     required>
             </div>
@@ -56,9 +60,10 @@
                     'has-danger': orchestrationFlow.invalid && (orchestrationFlow.dirty || orchestrationFlow.touched),
                     'has-success': orchestrationFlow.valid && (orchestrationFlow.dirty || orchestrationFlow.touched)
             }">
-                <label>Orchestration URI</label>
+                <label for="recipe-orchestrationFlow">Orchestration URI</label>
                 <input type="orchestrationFlow"
                     class="form-control"
+                    id="recipe-orchestrationFlow"
                     formControlName="orchestrationFlow"
                     required>
             </div>
@@ -68,13 +73,14 @@
                 'has-danger': modelName.invalid && (modelName.dirty || modelName.touched),
                 'has-success': modelName.valid && (modelName.dirty || modelName.touched)
             }">
-                <label>Recipe Timeout</label>
+                <label for="recipe-recipeTimeout">Recipe Timeout</label>
                 <input type="text"
                     class="form-control"
+                    id="recipe-recipeTimeout"
                     formControlName="recipeTimeout"
                     required>
             </div>
-            <button style="margin-right: 10px;"
+            <button type="button" style="margin-right: 10px;"
                 class="btn btn-primary"
                 (click)="closeDialog($event)">Cancel
             </button>

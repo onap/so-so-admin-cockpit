@@ -1,6 +1,6 @@
 /**
 ============LICENSE_START=======================================================
- Copyright (C) 2018 Ericsson. All rights reserved.
+ Copyright (C) 2026 Deutsche Telekom AG. All rights reserved.
 ================================================================================
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,27 +17,28 @@ See the License for the specific language governing permissions and
 SPDX-License-Identifier: Apache-2.0
 ============LICENSE_END=========================================================
 
-@authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com
 */
 
-import { TestBed, inject } from '@angular/core/testing';
-
 import { ToastrNotificationService } from './toastr-notification-service.service';
-
-class StubbedToastrNotificationService extends ToastrNotificationService {
-  toastrSettings() {
-  }
-}
-
-describe('ToastrNotificationService', () => {
+describe('Toastr notification adapter', () => {
+  let original: any, stub: any, service: ToastrNotificationService;
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [ToastrNotificationService,
-        { provide: ToastrNotificationService, useClass: StubbedToastrNotificationService }]
-    });
+    original = window['toastr'];
+    stub = jasmine.createSpyObj('toastr', ['info', 'error']);
+    window['toastr'] = stub;
+    service = new ToastrNotificationService();
   });
-
-  it('component should be created', inject([ToastrNotificationService], (service: ToastrNotificationService) => {
-    expect(service).toBeTruthy();
-  }));
+  afterEach(() => (window['toastr'] = original));
+  it('shows error messages with the error title', () => {
+    service.error('failed');
+    expect(stub.error).toHaveBeenCalledWith('failed', 'Error');
+  });
+  it('shows informational messages with the info title', () => {
+    service.info('done');
+    expect(stub.info).toHaveBeenCalledWith('done', 'Info');
+  });
+  it('configures duplicate prevention and visible notification placement', () => {
+    expect(stub.options.preventDuplicates).toBe(true);
+    expect(stub.options.positionClass).toBe('toast-bottom-full-width');
+  });
 });

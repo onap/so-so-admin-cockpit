@@ -1,6 +1,6 @@
 /**
 ============LICENSE_START=======================================================
- Copyright (C) 2018 Ericsson. All rights reserved.
+ Copyright (C) 2026 Deutsche Telekom AG. All rights reserved.
 ================================================================================
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,62 +17,72 @@ See the License for the specific language governing permissions and
 SPDX-License-Identifier: Apache-2.0
 ============LICENSE_END=========================================================
 
-@authors: andrei.barcovschi@ericsson.com
 */
 
 import { SearchData } from './searchData.model';
-import { SearchRequest } from './SearchRequest.model';
-import { Observable, throwError } from 'rxjs';
-
-describe('SearchData', () => {
-  let searchRequest: SearchRequest;
-  let searchData: SearchData;
-
+describe('Search criteria', () => {
+  let data: SearchData;
   beforeEach(() => {
-    searchData = new SearchData();
+    data = new SearchData();
+    data.startDate = new Date(2020, 0, 2, 8, 0, 0, 0);
+    data.endDate = new Date(2020, 0, 2, 9, 0, 0, 0);
+    data.selectedStartHour = '08';
+    data.selectedStartMinute = '00';
+    data.selectedEndHour = '09';
+    data.selectedEndMinute = '00';
   });
-
-  it('should return a SearchRequest observable with selectedValueSTATUS != ALL', () => { // NOT ALL CHANGE TEST TO TEST THIS ISNTESASD
-    searchData.serviceInstanceId = "bd827d8c-4b07-11e9-8646-d663bd873d93";
-    searchData.requestId = "cf1343d8-4b07-11e9-8646-d663bd873d93";
-    searchData.serviceInstanceName = "service-123";
-    searchData.selectedValueSTATUS = "COMPLETE";
-
-    searchData.getSearchRequest().subscribe((request: SearchRequest) => {
-      searchRequest = request;
-    });
-    let filters = searchRequest.getFilters();
-    expect(searchRequest.getFilters()).toEqual({ serviceInstanceId: [ 'EQ', 'bd827d8c-4b07-11e9-8646-d663bd873d93' ],
-                                              requestId: [ 'EQ', 'cf1343d8-4b07-11e9-8646-d663bd873d93' ],
-                                              serviceInstanceName: [ 'EQ', 'service-123' ],
-                                              requestStatus: [ 'EQ', 'COMPLETE' ]
-                                              });
-    expect(searchRequest.getStartTimeInMilliseconds()).toBe(searchData.startDate.getTime());
-    expect(searchRequest.getEndTimeInMilliseconds()).toBe(searchData.endDate.getTime());
+  ['startDate', 'endDate'].forEach((field) =>
+    it('rejects a missing ' + field, () => {
+      data[field] = null;
+      data.getSearchRequest().subscribe(
+        () => fail('expected rejection'),
+        (e) => expect(e).toContain('date')
+      );
+    })
+  );
+  it('rejects reversed dates', () => {
+    data.selectedStartHour = '10';
+    data.getSearchRequest().subscribe(
+      () => fail('expected rejection'),
+      (e) => expect(e).toContain('End time')
+    );
   });
-
-  it('should throw an error if found incorrect start or end date', () => {
-    searchData.startDate = null;
-    searchData.endDate = undefined;
-    searchData.getSearchRequest().subscribe({
-      error: (err) => {
-        expect(err).toEqual('Found end or start date empty, Please enter start and end date')
-      }
+  it('accepts equal time bounds', () => {
+    data.selectedEndHour = '08';
+    data
+      .getSearchRequest()
+      .subscribe((r) =>
+        expect(r.getStartTimeInMilliseconds()).toBe(
+          r.getEndTimeInMilliseconds()
+        )
+      );
+  });
+  it('omits empty filters and ALL status and preserves exact time bounds', () => {
+    data.getSearchRequest().subscribe((r) => {
+      expect(r.getFilters()).toEqual({});
+      expect(r.getStartTimeInMilliseconds()).toBe(
+        new Date(2020, 0, 2, 8, 0).getTime()
+      );
+      expect(r.getEndTimeInMilliseconds()).toBe(
+        new Date(2020, 0, 2, 9, 0).getTime()
+      );
     });
   });
-
-  it('should throw an error if startTimeInMilliseconds > endTimeInMilliseconds', () => {
-    searchData.startDate = new Date('March 20, 2019 02:00:00');
-    searchData.endDate = new Date('March 20, 2019 01:00:00');
-    searchData.selectedStartHour = '02';
-    searchData.selectedEndHour = '01';
-    searchData.selectedStartMinute = '00';
-    searchData.selectedEndMinute = '00';
-
-    searchData.getSearchRequest().subscribe({
-      error: (err) => {
-        expect(err).toEqual("End time: " + searchData.endDate + " can not be greater then start time: " + searchData.startDate)
-      }
-    });
+  it('includes values with their selected operators and explicit status', () => {
+    data.serviceInstanceId = 'id';
+    data.requestId = 'req';
+    data.serviceInstanceName = 'demo';
+    data.selectedValueSN = 'LIKE';
+    data.selectedValueSTATUS = 'FAILED';
+    data
+      .getSearchRequest()
+      .subscribe((r) =>
+        expect(r.getFilters()).toEqual({
+          serviceInstanceId: ['EQ', 'id'],
+          requestId: ['EQ', 'req'],
+          serviceInstanceName: ['LIKE', 'demo'],
+          requestStatus: ['EQ', 'FAILED']
+        })
+      );
   });
 });

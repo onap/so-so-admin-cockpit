@@ -10,6 +10,8 @@
     <name>SO Admin Cockpit Monitoring Workflow UI</name>
     <properties>
         <yarn.proxy>false</yarn.proxy>
+        <skipTests>false</skipTests>
+        <skipFrontendTests>${skipTests}</skipFrontendTests>
     </properties>
     <build>
         <plugins>
@@ -39,7 +41,16 @@
                             <goal>yarn</goal>
                         </goals>
                         <configuration>
-                            <arguments>install</arguments>
+                            <arguments>install --frozen-lockfile</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>frontend unit tests</id>
+                        <phase>test</phase>
+                        <goals><goal>yarn</goal></goals>
+                        <configuration>
+                            <arguments>test:ci --progress=false</arguments>
+                            <skip>${skipFrontendTests}</skip>
                         </configuration>
                     </execution>
                     <execution>

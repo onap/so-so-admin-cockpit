@@ -38,12 +38,12 @@ export class RecipeComponent implements OnInit {
     if (!this.parentData.addNew) {
       let dd = this.parentData.fData;
       this.modelName = new FormControl(dd.modelName);
-      if (dd.tab === 'Service Recipe') {
+      if (this.parentData.tab === 'Service Recipe') {
         this.modelVersionId = new FormControl(dd.serviceModelUUID);
       } else {
         this.modelVersionId = new FormControl(dd.versionStr);
       }
-      if (dd.tab === 'Network Recipe') {
+      if (this.parentData.tab === 'VNF Recipe') {
         this.nfRole = new FormControl(dd.nfRole,);
       } else {
         this.nfRole = new FormControl('',);

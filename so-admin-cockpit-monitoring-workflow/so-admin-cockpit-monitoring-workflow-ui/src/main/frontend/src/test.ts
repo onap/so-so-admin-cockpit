@@ -38,3 +38,6 @@ getTestBed().initTestEnvironment(
 const context = require.context('./', true, /\.spec\.ts$/);
 // And load the modules.
 context.keys().map(context);
+
+const sources = require.context('./app', true, /\.ts$/);
+sources.keys().filter(path => !/\.spec\.ts$|\/testing\//.test(path)).map(sources);
