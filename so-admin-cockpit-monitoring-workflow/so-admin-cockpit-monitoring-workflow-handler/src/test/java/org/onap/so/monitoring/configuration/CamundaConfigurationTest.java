@@ -19,8 +19,8 @@
  */
 package org.onap.so.monitoring.configuration;
 
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 import org.onap.so.monitoring.configuration.camunda.CamundaConfiguration;
 import org.onap.so.monitoring.configuration.camunda.CamundaRestUrlProvider;
 

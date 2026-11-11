@@ -19,8 +19,8 @@
  */
 package org.onap.so.monitoring.rest.api;
 
-import javax.annotation.PostConstruct;
-import javax.ws.rs.ApplicationPath;
+import jakarta.annotation.PostConstruct;
+import jakarta.ws.rs.ApplicationPath;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.context.annotation.Configuration;

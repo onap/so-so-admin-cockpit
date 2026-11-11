@@ -6,7 +6,8 @@ server:
     trustStorePassword: 72z0TFN&xfSR;;&NrIP^QB,^
   port: 9091
   tomcat:
-    max-threads: 50
+    threads:
+      max: 50
 camunda:
   rest:
     api:
@@ -26,6 +27,10 @@ mso:
         endpoint: http://so-catalog-db-adapter.onap:8082
   db:
     auth: Basic YnBlbDpwYXNzd29yZDEk
+so:
+  auth:
+    username: bpel
+    password: password1$
 spring:
   main:
     allow-bean-definition-overriding: true

@@ -1,9 +1,16 @@
 server:
   port: 8080
   tomcat:
-    max-threads: 50
+    threads:
+      max: 50
 ssl-enable: false
 spring:
+  security:
+    usercredentials:
+      -
+        username: test-gui-user
+        password: '$2a$10$zMcjLr9PPcJLjxLNA1aXbO8lF35HWevKNuBSNFT2Z//wSnsafaapi'
+        role: GUI-Client
   datasource:
     jdbc-url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;
     driver-class-name: org.h2.Driver
@@ -20,5 +27,11 @@ mso:
       api:
         url: http://localhost:8083/infraActiveRequests/
         auth: Basic YnBlbDpwYXNzd29yZDEk
-
-      
+  catalog:
+    db:
+      spring:
+        endpoint: http://localhost:8082
+so:
+  auth:
+    username: cockpit
+    password: cockpit-secret

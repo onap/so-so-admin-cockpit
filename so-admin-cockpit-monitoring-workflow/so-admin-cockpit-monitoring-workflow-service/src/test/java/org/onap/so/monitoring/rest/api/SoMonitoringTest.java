@@ -20,11 +20,11 @@ package org.onap.so.monitoring.rest.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.onap.so.db.catalog.beans.*;
 import org.onap.so.db.catalog.beans.ServiceRecipe;
 import org.onap.so.db.catalog.client.CatalogDbClient;
@@ -35,13 +35,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
 
 import static org.onap.so.monitoring.rest.api.Constants.SERVICE_RECIPE_REQUEST_JSON_FILE;
@@ -62,7 +62,7 @@ import static org.onap.so.monitoring.rest.api.Constants.EMPTY_ARRAY_RESPONSE;
 /**
  * @author md.irshad.sheikh@huawei.com
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class SoMonitoringTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SoMonitoringTest.class);

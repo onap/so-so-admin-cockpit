@@ -19,14 +19,14 @@
  */
 package org.onap.so.monitoring.rest.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.UUID;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.onap.so.monitoring.camunda.model.ActivityInstance;
 import org.onap.so.monitoring.camunda.model.ProcessDefinition;
 import org.onap.so.monitoring.camunda.model.ProcessInstance;

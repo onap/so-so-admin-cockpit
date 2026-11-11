@@ -19,8 +19,8 @@
  */
 package org.onap.so.monitoring.configuration;
 
-import static org.junit.Assert.assertNotNull;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Test;
 import org.onap.so.monitoring.configuration.rest.HttpServiceProviderConfiguration;
 import org.onap.so.rest.service.HttpRestServiceProvider;
 import org.springframework.web.client.RestTemplate;

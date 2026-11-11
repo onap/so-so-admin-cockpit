@@ -20,8 +20,8 @@
 package org.onap.so.monitoring.configuration.rest;
 
 import static org.onap.so.client.RestTemplateConfig.CONFIGURABLE_REST_TEMPLATE;
-import org.onap.so.configuration.rest.BasicHttpHeadersProvider;
-import org.onap.so.configuration.rest.HttpHeadersProvider;
+import org.onap.so.configuration.BasicHttpHeadersProvider;
+import org.onap.so.configuration.HttpHeadersProvider;
 import org.onap.so.rest.service.HttpRestServiceProvider;
 import org.onap.so.rest.service.HttpRestServiceProviderImpl;
 import org.springframework.beans.factory.annotation.Autowired;

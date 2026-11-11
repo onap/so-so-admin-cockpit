@@ -19,11 +19,11 @@
  */
 package org.onap.so.monitoring.rest.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.onap.so.client.RestTemplateConfig.CONFIGURABLE_REST_TEMPLATE;
-import static org.onap.so.configuration.rest.BasicHttpHeadersProvider.AUTHORIZATION_HEADER;
+import static org.onap.so.configuration.BasicHttpHeadersProvider.AUTHORIZATION_HEADER;
 import static org.onap.so.monitoring.rest.api.Constants.ACTIVITY_INSTANCE_RESPONSE_JSON_FILE;
 import static org.onap.so.monitoring.rest.api.Constants.EMPTY_ARRAY_RESPONSE;
 import static org.onap.so.monitoring.rest.api.Constants.EMPTY_STRING;
@@ -49,11 +49,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.onap.so.monitoring.configuration.camunda.CamundaRestUrlProvider;
 import org.onap.so.monitoring.configuration.database.DatabaseUrlProvider;
 import org.onap.so.monitoring.model.ActivityInstanceDetail;
@@ -67,7 +66,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
@@ -75,7 +73,6 @@ import org.springframework.web.client.RestTemplate;
 /**
  * @author waqas.ikram@ericsson.com, andrei.barcovschi@ericsson.com
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("test")
 @SpringBootTest
 public class SoMonitoringControllerTest {
@@ -100,7 +97,7 @@ public class SoMonitoringControllerTest {
     @Autowired
     private SoMonitoringController objUnderTest;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         mockRestServiceServer = MockRestServiceServer.bindTo(restTemplate).build();
     }
