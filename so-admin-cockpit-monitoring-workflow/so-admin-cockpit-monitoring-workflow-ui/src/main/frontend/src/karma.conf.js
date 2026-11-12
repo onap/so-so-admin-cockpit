@@ -27,55 +27,7 @@ module.exports = function (config) {
       dir: require('path').join(__dirname, '../coverage'),
       reports: ['html', 'lcovonly', 'json-summary'],
       fixWebpackSourcePaths: true,
-      thresholds: {
-        emitWarning: false,
-        each: {
-          overrides: {
-            '**/data.service.ts': {
-              lines: 100,
-              functions: 100,
-              statements: 100,
-              branches: 100
-            },
-            '**/http-error-handler.service.ts': {
-              lines: 100,
-              functions: 100,
-              statements: 100,
-              branches: 83
-            },
-            '**/details/details.component.ts': {
-              lines: 98,
-              functions: 96,
-              statements: 93,
-              branches: 67
-            },
-            '**/home/home.component.ts': {
-              lines: 100,
-              functions: 100,
-              statements: 100,
-              branches: 100
-            },
-            '**/model/searchData.model.ts': {
-              lines: 97,
-              functions: 100,
-              statements: 97,
-              branches: 96
-            },
-            '**/onboard/onboard.component.ts': {
-              lines: 88,
-              functions: 86,
-              statements: 90,
-              branches: 73
-            },
-            '**/recipe/recipe.component.ts': {
-              lines: 97,
-              functions: 100,
-              statements: 97,
-              branches: 83
-            }
-          }
-        }
-      }
+      thresholds: require('../coverage-thresholds.json')
     },
     reporters: ['progress', 'kjhtml', 'junit'],
     junitReporter: {
