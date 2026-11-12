@@ -7,7 +7,7 @@
     "build": "ng build --configuration production",
     "test": "ng test",
     "lint": "ng lint",
-    "test:ci": "ng test --watch=false --browsers=ChromeHeadless --progress=false --code-coverage"
+    "test:ci": "node scripts/test-ci.spec.js && node scripts/test-ci.js"
   },
   "private": true,
   "dependencies": {
