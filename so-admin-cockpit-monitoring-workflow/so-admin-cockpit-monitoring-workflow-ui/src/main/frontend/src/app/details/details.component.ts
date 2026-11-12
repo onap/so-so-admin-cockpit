@@ -41,7 +41,7 @@ import { BpmnViewerService, BpmnViewerAdapter } from './bpmn-viewer.service';
 export class DetailsComponent implements AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private activeLoad = 0;
-  @ViewChild('canvas') elementReference: ElementRef;
+  @ViewChild('canvas') elementReference?: ElementRef<HTMLElement>;
   bpmnViewer: BpmnViewerAdapter | null = null;
   processInstanceID = '';
   processDefinitionID = '';
@@ -57,6 +57,8 @@ export class DetailsComponent implements AfterViewInit, OnDestroy {
     private router: Router, private spinner: NgxSpinnerService, private viewers: BpmnViewerService) {}
 
   ngAfterViewInit() {
+    if (!this.elementReference) { return; }
+    const container = this.elementReference.nativeElement;
     this.route.params.pipe(
       map(params => params.id as string),
       distinctUntilChanged(),
@@ -74,14 +76,15 @@ export class DetailsComponent implements AfterViewInit, OnDestroy {
       }),
       switchMap(id => {
         const load = this.activeLoad;
-        this.bpmnViewer = this.viewers.create(this.elementReference.nativeElement);
-        return merge(this.loadDiagram(id, load), this.loadVariables(id));
+        const viewer = this.viewers.create(container);
+        this.bpmnViewer = viewer;
+        return merge(this.loadDiagram(id, load, viewer), this.loadVariables(id));
       }),
       takeUntil(this.destroy$)
     ).subscribe();
   }
 
-  private loadDiagram(id: string, load: number): Observable<void> {
+  private loadDiagram(id: string, load: number, viewer: BpmnViewerAdapter): Observable<void> {
     let failure = 'Unable to get process instance for id: ' + id;
     return this.data.getProcessInstance(id).pipe(
       tap(instance => {
@@ -103,7 +106,7 @@ export class DetailsComponent implements AfterViewInit, OnDestroy {
         this.activityInstance = result[0];
         this.processDefinition = result[1];
         failure = 'Unable to load BPMN flow ';
-        return this.importDiagram(result[1].processDefinitionXml, result[0], load);
+        return this.importDiagram(result[1].processDefinitionXml, result[0], load, viewer);
       }),
       catchError(error => {
         this.popup.error(failure + (failure === 'Unable to load BPMN flow ' ? '' : ' Error code:' + error.status));
@@ -114,8 +117,7 @@ export class DetailsComponent implements AfterViewInit, OnDestroy {
     );
   }
 
-  private importDiagram(xml: string, activities: ActivityInstance[], load: number): Observable<void> {
-    const viewer = this.bpmnViewer;
+  private importDiagram(xml: string, activities: ActivityInstance[], load: number, viewer: BpmnViewerAdapter): Observable<void> {
     return new Observable<void>(observer => {
       viewer.importXML(xml, error => {
         if (load !== this.activeLoad || observer.closed) { return; }
@@ -156,7 +158,7 @@ export class DetailsComponent implements AfterViewInit, OnDestroy {
   zoomIn() { this.zoom(1); }
   zoomOut() { this.zoom(-1); }
   private zoom(step: number) {
-    if (!this.bpmnViewer) { return; }
+    if (!this.bpmnViewer || !this.elementReference) { return; }
     const element: HTMLElement = this.elementReference.nativeElement;
     this.bpmnViewer.get('zoomScroll').zoom(step, { x: element.offsetWidth / 2, y: element.offsetHeight / 2 });
   }

@@ -19,14 +19,18 @@ SPDX-License-Identifier: Apache-2.0
 
 */
 
-export class BpmnViewerStub {
-  addDrilldown = jasmine.createSpy('drilldown').and.callFake((id, processId, navigate) => {
+import { BpmnViewerAdapter, BpmnCanvas, BpmnRegistry, BpmnOverlays, BpmnZoomScroll } from '../details/bpmn-viewer.service';
+
+export class BpmnViewerStub implements BpmnViewerAdapter {
+  addDrilldown = jasmine.createSpy('drilldown').and.callFake((
+    id: string, processId: string | null, navigate: (processId: string) => void
+  ) => {
     this.overlay = document.createElement('div');
-    this.overlay.onclick = () => navigate(processId);
-    this.overlays.add(id, { html: this.overlay });
+    this.overlay.onclick = () => { if (processId) { navigate(processId); } };
+    this.overlays.add(id, { position: { top: -5, left: -5 }, html: this.overlay });
   });
-  importError: Error = null;
-  overlay: HTMLElement;
+  importError?: Error | null;
+  overlay: HTMLElement = document.createElement('div');
   canvas = {
     zoom: jasmine.createSpy('zoom'),
     addMarker: jasmine.createSpy('marker'),
@@ -35,26 +39,31 @@ export class BpmnViewerStub {
   registry = {
     get: jasmine
       .createSpy('get')
-      .and.callFake((id) =>
+      .and.callFake((id: string) =>
         id === 'missing' ? undefined : { id, width: 100, height: 80 }
       )
   };
   overlays = {
     add: jasmine
       .createSpy('add')
-      .and.callFake((id, config) => (this.overlay = config.html))
+      .and.callFake((id: string, config: { html: HTMLElement }) => (this.overlay = config.html))
   };
   zoomScroll = { zoom: jasmine.createSpy('zoom') };
   importXML = jasmine
     .createSpy('importXML')
-    .and.callFake((xml, done) => done(this.importError));
-  get(name: string) {
-    return {
-      canvas: this.canvas,
-      elementRegistry: this.registry,
-      overlays: this.overlays,
-      zoomScroll: this.zoomScroll
-    }[name];
-  }
+    .and.callFake((xml: string, done: (error: Error | null | undefined) => void) => done(this.importError));
   destroy = jasmine.createSpy('destroy');
+  get(name: 'canvas'): BpmnCanvas;
+  get(name: 'elementRegistry'): BpmnRegistry;
+  get(name: 'overlays'): BpmnOverlays;
+  get(name: 'zoomScroll'): BpmnZoomScroll;
+  get(name: string): BpmnCanvas | BpmnRegistry | BpmnOverlays | BpmnZoomScroll {
+    switch (name) {
+      case 'canvas': return this.canvas;
+      case 'elementRegistry': return this.registry;
+      case 'overlays': return this.overlays;
+      case 'zoomScroll': return this.zoomScroll;
+      default: throw new Error('Unsupported viewer service: ' + name);
+    }
+  }
 }

@@ -95,6 +95,7 @@ describe('Application recipe dialog', () => {
     const dialogElement = container.querySelector('[role="dialog"]');
     const title = container.querySelector('h1');
     expect(dialogElement).not.toBeNull();
+    if (!title || !dialogElement) { fail('expected a titled dialog'); return; }
     expect(title.id).not.toBe('');
     expect(dialogElement.getAttribute('aria-labelledby')).toBe(title.id);
     expect(container.textContent).toContain('Add Recipe');

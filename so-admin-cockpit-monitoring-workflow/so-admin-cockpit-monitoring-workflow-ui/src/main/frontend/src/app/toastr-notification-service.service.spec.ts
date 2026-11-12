@@ -19,16 +19,17 @@ SPDX-License-Identifier: Apache-2.0
 
 */
 
-import { ToastrNotificationService } from './toastr-notification-service.service';
+import { ToastrNotificationService, ToastrRuntime } from './toastr-notification-service.service';
 describe('Toastr notification adapter', () => {
-  let original: any, stub: any, service: ToastrNotificationService;
+  const host = window as Window & { toastr: ToastrRuntime };
+  let original: ToastrRuntime, stub: jasmine.SpyObj<ToastrRuntime>, service: ToastrNotificationService;
   beforeEach(() => {
-    original = window['toastr'];
-    stub = jasmine.createSpyObj('toastr', ['info', 'error']);
-    window['toastr'] = stub;
+    original = host.toastr;
+    stub = jasmine.createSpyObj<ToastrRuntime>('toastr', ['info', 'error']);
+    host.toastr = stub;
     service = new ToastrNotificationService();
   });
-  afterEach(() => (window['toastr'] = original));
+  afterEach(() => (host.toastr = original));
   it('shows error messages with the error title', () => {
     service.error('failed');
     expect(stub.error).toHaveBeenCalledWith('failed', 'Error');

@@ -31,7 +31,7 @@ describe('Search criteria', () => {
     data.selectedEndHour = '09';
     data.selectedEndMinute = '00';
   });
-  ['startDate', 'endDate'].forEach((field) =>
+  (['startDate', 'endDate'] as Array<'startDate' | 'endDate'>).forEach((field) =>
     it('rejects a missing ' + field, () => {
       data[field] = null;
       data.getSearchRequest().subscribe(

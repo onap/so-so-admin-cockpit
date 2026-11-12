@@ -27,7 +27,13 @@ import {
   platformBrowserDynamicTesting
 } from '@angular/platform-browser-dynamic/testing';
 
-declare const require: any;
+interface WebpackContext {
+  (path: string): void;
+  keys(): string[];
+}
+declare const require: {
+  context(path: string, recursive: boolean, expression: RegExp): WebpackContext;
+};
 
 // First, initialize the Angular testing environment.
 getTestBed().initTestEnvironment(

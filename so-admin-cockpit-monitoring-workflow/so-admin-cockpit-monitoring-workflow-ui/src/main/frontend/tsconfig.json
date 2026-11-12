@@ -15,6 +15,10 @@
     "lib": [
       "es2017",
       "dom"
-    ]
+    ],
+    "strict": true
+  },
+  "angularCompilerOptions": {
+    "fullTemplateTypeCheck": true
   }
 }

@@ -37,16 +37,18 @@ import {
   notificationStub,
   spinnerStub
 } from '../testing/component-test';
+import { BpmnInfraRequest } from '../model/bpmnInfraRequest.model';
+import { ProcessInstanceId } from '../model/processInstanceId.model';
 import { request } from '../testing/api-fixtures';
 describe('Search workflow', () => {
   let fixture: ComponentFixture<HomeComponent>,
     component: HomeComponent,
-    api: any,
-    popup: any,
-    spinner: any,
+    api: jasmine.SpyObj<Pick<DataService, 'getBpmnInfraRequest' | 'getProcessInstanceId'>>,
+    popup: jasmine.SpyObj<Pick<ToastrNotificationService, 'error' | 'info'>>,
+    spinner: NgxSpinnerService & { show: jasmine.Spy; hide: jasmine.Spy },
     router: Router;
   beforeEach(() => {
-    api = jasmine.createSpyObj('api', [
+    api = jasmine.createSpyObj<Pick<DataService, 'getBpmnInfraRequest' | 'getProcessInstanceId'>>('api', [
       'getBpmnInfraRequest',
       'getProcessInstanceId'
     ]);
@@ -67,7 +69,7 @@ describe('Search workflow', () => {
     spyOn(router, 'navigate');
     fixture.detectChanges();
   });
-  function search(rows: any[]) {
+  function search(rows: BpmnInfraRequest[]) {
     api.getBpmnInfraRequest.and.returnValue(of(rows));
     component.makeCall();
     fixture.detectChanges();
@@ -144,6 +146,14 @@ describe('Search workflow', () => {
     ]).toEqual([0, 0, 0, 0, 0]);
     expect(fixture.nativeElement.textContent).not.toContain('Demo service');
   });
+  it('retains early results before table view queries are available', () => {
+    component.paginator = undefined;
+    component.sort = undefined;
+    search([request]);
+    expect(component.processData.data).toEqual([request]);
+    expect(component.totalVal).toBe(1);
+    expect(spinner.hide).toHaveBeenCalled();
+  });
   it('rejects invalid dates without calling the API and stops loading', () => {
     component.searchData.startDate = null;
     component.makeCall();
@@ -188,7 +198,7 @@ describe('Search workflow', () => {
     expect(spinner.hide).toHaveBeenCalled();
   });
   it('keeps the latest search rows when responses arrive in reverse order', () => {
-    const first = new Subject<any[]>(), second = new Subject<any[]>();
+    const first = new Subject<BpmnInfraRequest[]>(), second = new Subject<BpmnInfraRequest[]>();
     api.getBpmnInfraRequest.and.returnValues(first, second);
     component.makeCall();
     component.makeCall();
@@ -201,7 +211,7 @@ describe('Search workflow', () => {
     expect(popup.info.calls.count()).toBe(1);
   });
   it('retains loading ownership across overlapping search and lookup', () => {
-    const rows = new Subject<any[]>(), lookup = new Subject<any>();
+    const rows = new Subject<BpmnInfraRequest[]>(), lookup = new Subject<HttpResponse<ProcessInstanceId>>();
     api.getBpmnInfraRequest.and.returnValue(rows);
     api.getProcessInstanceId.and.returnValue(lookup);
     component.makeCall();
@@ -214,7 +224,7 @@ describe('Search workflow', () => {
     expect(spinner.hide).toHaveBeenCalledTimes(1);
   });
   it('cancels pending work on destruction without late results or navigation', () => {
-    const rows = new Subject<any[]>(), lookup = new Subject<any>();
+    const rows = new Subject<BpmnInfraRequest[]>(), lookup = new Subject<HttpResponse<ProcessInstanceId>>();
     api.getBpmnInfraRequest.and.returnValue(rows);
     api.getProcessInstanceId.and.returnValue(lookup);
     component.makeCall();
@@ -222,23 +232,23 @@ describe('Search workflow', () => {
     fixture.destroy();
     rows.next([request]);
     lookup.next(new HttpResponse({ body: { processInstanceId: 'late' } }));
-    expect(component.processData).toBeUndefined();
+    expect(component.processData.data).toEqual([]);
     expect(router.navigate).not.toHaveBeenCalled();
     expect(spinner.hide).toHaveBeenCalled();
   });
   it('permits another search after the latest request failed', () => {
-    const stale = new Subject<any[]>();
+    const stale = new Subject<BpmnInfraRequest[]>();
     api.getBpmnInfraRequest.and.returnValues(stale, throwError({ status: 500 }), of([]));
     component.makeCall();
     component.makeCall();
     stale.next([request]);
-    expect(component.processData).toBeUndefined();
+    expect(component.processData.data).toEqual([]);
     component.makeCall();
     expect(component.processData.data).toEqual([]);
     expect(spinner.hide).toHaveBeenCalled();
   });
   it('does not navigate for an older lookup after a newer search starts', () => {
-    const lookup = new Subject<any>();
+    const lookup = new Subject<HttpResponse<ProcessInstanceId>>();
     api.getProcessInstanceId.and.returnValue(lookup);
     api.getBpmnInfraRequest.and.returnValue(of([]));
     component.getProcessInstanceId('request-1');
@@ -248,7 +258,7 @@ describe('Search workflow', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
   it('does not report a stale search failure over a pending lookup', () => {
-    const rows = new Subject<any[]>(), lookup = new Subject<any>();
+    const rows = new Subject<BpmnInfraRequest[]>(), lookup = new Subject<HttpResponse<ProcessInstanceId>>();
     api.getBpmnInfraRequest.and.returnValue(rows);
     api.getProcessInstanceId.and.returnValue(lookup);
     component.makeCall(); component.getProcessInstanceId('request-1');
@@ -257,7 +267,7 @@ describe('Search workflow', () => {
     lookup.complete();
   });
   it('does not report a stale lookup failure over a newer search', () => {
-    const lookup = new Subject<any>();
+    const lookup = new Subject<HttpResponse<ProcessInstanceId>>();
     api.getProcessInstanceId.and.returnValue(lookup);
     api.getBpmnInfraRequest.and.returnValue(of([]));
     component.getProcessInstanceId('request-1'); component.makeCall();

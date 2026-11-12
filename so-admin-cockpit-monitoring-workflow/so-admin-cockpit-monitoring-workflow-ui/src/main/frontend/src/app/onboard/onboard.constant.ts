@@ -23,9 +23,39 @@ SPDX-License-Identifier: Apache-2.0
 
 export class Constants {
 
-  public static DISPLAYED_COLUMNS_SERVICE = ['serviceModelUUID', 'paramXsd', 'action', 'description', 'orchestrationUri', 'recipeTimeout', 'serviceTimeoutInterim', 'created', 'operation'];
-  public static DISPLAYED_COLUMNS_NETWORK = ['modelName', 'paramXsd', 'action', 'description', 'orchestrationUri', 'recipeTimeout', 'versionStr', 'serviceType', 'created', 'operation'];
-  public static DISPLAYED_COLUMNS_VNF = ['nfRole', 'paramXsd', 'vfModuleId', 'action', 'description', 'orchestrationUri', 'recipeTimeout', 'versionStr', 'serviceType', 'created', 'operation'];
+  public static DISPLAYED_COLUMNS_SERVICE = [
+    'serviceModelUUID',
+    'paramXsd',
+    'action',
+    'description',
+    'orchestrationUri',
+    'recipeTimeout',
+    'serviceTimeoutInterim',
+    'created',
+    'operation'];
+  public static DISPLAYED_COLUMNS_NETWORK = [
+    'modelName',
+    'paramXsd',
+    'action',
+    'description',
+    'orchestrationUri',
+    'recipeTimeout',
+    'versionStr',
+    'serviceType',
+    'created',
+    'operation'];
+  public static DISPLAYED_COLUMNS_VNF = [
+    'nfRole',
+    'paramXsd',
+    'vfModuleId',
+    'action',
+    'description',
+    'orchestrationUri',
+    'recipeTimeout',
+    'versionStr',
+    'serviceType',
+    'created',
+    'operation'];
 
   public static DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 }

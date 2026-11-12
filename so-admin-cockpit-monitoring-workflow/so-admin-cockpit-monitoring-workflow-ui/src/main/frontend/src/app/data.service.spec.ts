@@ -24,13 +24,25 @@ import {
   HttpClientTestingModule,
   HttpTestingController
 } from '@angular/common/http/testing';
+import { Observable } from 'rxjs';
+import { ActivityInstance } from './model/activityInstance.model';
+import { ProcessInstanceDetail } from './model/processInstance.model';
+import { ProcessDefinitionDetail } from './model/processDefinition.model';
+import { VariableInstance } from './model/variableInstance.model';
+import { ServiceRecipeResponse, NetworkRecipeResponse, VnfRecipeResponse } from './model/api-response.model';
+import { SearchFilters } from './model/SearchRequest.model';
 import { DataService } from './data.service';
 import { ToastrNotificationService } from './toastr-notification-service.service';
 import { environment } from '../environments/environment';
 import { notificationStub } from './testing/component-test';
 import { request, process, activity, serviceRecipe, networkRecipe, vnfRecipe } from './testing/api-fixtures';
+
+type HttpGetResponse = ActivityInstance[] | ProcessInstanceDetail | ProcessDefinitionDetail | VariableInstance[] |
+  ServiceRecipeResponse | NetworkRecipeResponse | VnfRecipeResponse;
+type HttpGetCase = [() => Observable<HttpGetResponse | null>, string, HttpGetResponse];
+
 describe('DataService HTTP contract', () => {
-  let service: DataService, http: HttpTestingController, popup: any;
+  let service: DataService, http: HttpTestingController, popup: jasmine.SpyObj<Pick<ToastrNotificationService, 'error' | 'info'>>;
   const base = environment.soMonitoringBackendURL;
   beforeEach(() => {
     popup = notificationStub();
@@ -46,7 +58,7 @@ describe('DataService HTTP contract', () => {
   });
   afterEach(() => http.verify());
   it('posts filters and time bounds and returns search rows', () => {
-    const filters = { requestStatus: ['EQ', 'COMPLETE'] };
+    const filters: SearchFilters = { requestStatus: ['EQ', 'COMPLETE'] };
     service
       .getBpmnInfraRequest(filters, 100, 200)
       .subscribe((rows) => expect(rows).toEqual([request]));
@@ -58,42 +70,42 @@ describe('DataService HTTP contract', () => {
   it('retains the lookup HTTP response and process ID', () => {
     service.getProcessInstanceId('request-1').subscribe((r) => {
       expect(r.status).toBe(200);
-      expect(r.body.processInstanceId).toBe('process-1');
+      expect(r.body && r.body.processInstanceId).toBe('process-1');
     });
     const req = http.expectOne(base + '/process-instance-id/request-1');
     expect(req.request.method).toBe('GET');
     req.flush({ processInstanceId: 'process-1' });
   });
-  [
-    ['getActivityInstance', 'activity-instance', [activity]],
-    ['getProcessInstance', 'process-instance', process]
-  ].forEach(([method, path, value]: any[]) => {
+  const processCases: HttpGetCase[] = [
+    [() => service.getActivityInstance('process-1'), 'activity-instance', [activity]],
+    [() => service.getProcessInstance('process-1'), 'process-instance', process]
+  ];
+  processCases.forEach(([call, path, value]) => {
     it('returns ' + path + ' from its GET response', () => {
-      service[method]('process-1').subscribe(data => expect(data).toEqual(value));
+      call().subscribe(data => expect(data).toEqual(value));
       const req = http.expectOne(base + '/' + path + '/process-1');
       expect(req.request.method).toBe('GET');
       req.flush(value);
     });
   });
-  [
+  const getCases: HttpGetCase[] = [
     [
-      'getProcessDefinition',
+      () => service.getProcessDefinition('id'),
       '/process-definition/id',
       { processDefinitionId: 'id', processDefinitionXml: '<xml/>' },
-      'id'
     ],
     [
-      'getVariableInstance',
+      () => service.getVariableInstance('id'),
       '/variable-instance/id',
       [{ name: 'region', type: 'String', value: 'west' }, { name: 'config', type: 'Object', value: { enabled: true, values: [null, 4] } }],
-      'id'
     ],
-    ['getServiceRecipe', '/serviceRecipes', { serviceRecipes: [serviceRecipe] }],
-    ['getNetworkRecipe', '/networkRecipes', { networkRecipes: [networkRecipe] }],
-    ['getVnfRecipe', '/vnfRecipes', { vnfRecipes: [vnfRecipe] }]
-  ].forEach(([method, path, value, id]: any[]) => {
+    [() => service.getServiceRecipe(), '/serviceRecipes', { serviceRecipes: [serviceRecipe] }],
+    [() => service.getNetworkRecipe(), '/networkRecipes', { networkRecipes: [networkRecipe] }],
+    [() => service.getVnfRecipe(), '/vnfRecipes', { vnfRecipes: [vnfRecipe] }]
+  ];
+  getCases.forEach(([call, path, value]) => {
     it('returns ' + path + ' response without changing its shape', () => {
-      service[method](id).subscribe((data) => expect(data).toEqual(value));
+      call().subscribe((data) => expect(data).toEqual(value));
       const req = http.expectOne(base + path);
       expect(req.request.method).toBe('GET');
       req.flush(value);
@@ -126,7 +138,9 @@ describe('DataService HTTP contract', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toBe(body);
     expect(req.request.headers.get('Content-Type')).toBe('application/json');
-    expect(req.request.serializeBody()).toBe('{"modelType":"Service","modelVersionId":"uuid","operation":"create","orchestrationFlow":"flow"}');
+    expect(req.request.serializeBody()).toBe(
+      '{"modelType":"Service","modelVersionId":"uuid","operation":"create","orchestrationFlow":"flow"}'
+    );
     req.flush(response, { status: 201, statusText: 'Created' });
   });
   [400, 404, 500].forEach((status) =>
@@ -179,14 +193,15 @@ describe('DataService HTTP contract', () => {
       .error(new ErrorEvent('network', { message: 'offline' }));
     expect(popup.error).not.toHaveBeenCalled();
   });
-  [
-    ['getServiceRecipe', '/serviceRecipes'],
-    ['getNetworkRecipe', '/networkRecipes'],
-    ['getVnfRecipe', '/vnfRecipes']
-  ].forEach(([method, path]) => {
+  const recipeCases: Array<[() => Observable<HttpGetResponse | null>, string]> = [
+    [() => service.getServiceRecipe(), '/serviceRecipes'],
+    [() => service.getNetworkRecipe(), '/networkRecipes'],
+    [() => service.getVnfRecipe(), '/vnfRecipes']
+  ];
+  recipeCases.forEach(([call, path]) => {
     [{ errMsg: 'Unable to process.' }, null].forEach((body) => {
       it('preserves the application error or null body for ' + path + ': ' + JSON.stringify(body), () => {
-        service[method]().subscribe((data) => expect(data).toEqual(body));
+        call().subscribe((data) => expect(data).toEqual(body));
         http.expectOne(base + path).flush(body);
         expect(popup.error).not.toHaveBeenCalled();
       });

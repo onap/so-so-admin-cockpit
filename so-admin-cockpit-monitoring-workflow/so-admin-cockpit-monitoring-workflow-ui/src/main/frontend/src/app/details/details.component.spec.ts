@@ -31,6 +31,10 @@ import { ToastrNotificationService } from '../toastr-notification-service.servic
 import { NgxSpinnerService } from 'ngx-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
+import { ActivityInstance } from '../model/activityInstance.model';
+import { ProcessInstanceDetail } from '../model/processInstance.model';
+import { ProcessDefinitionDetail } from '../model/processDefinition.model';
+import { VariableInstance } from '../model/variableInstance.model';
 import { BpmnViewerService } from './bpmn-viewer.service';
 import {
   componentImports,
@@ -42,22 +46,23 @@ import { process, activity } from '../testing/api-fixtures';
 describe('Process inspection', () => {
   let component: DetailsComponent,
     fixture: ComponentFixture<DetailsComponent>,
-    api: any,
-    popup: any,
-    spinner: any,
+    api: jasmine.SpyObj<Pick<DataService, 'getProcessInstance' | 'getActivityInstance' | 'getProcessDefinition' | 'getVariableInstance'>>,
+    popup: jasmine.SpyObj<Pick<ToastrNotificationService, 'error' | 'info'>>,
+    spinner: NgxSpinnerService & { show: jasmine.Spy; hide: jasmine.Spy },
     viewer: BpmnViewerStub,
-    viewers: any,
+    viewers: jasmine.SpyObj<Pick<BpmnViewerService, 'create'>>,
     allViewers: BpmnViewerStub[],
-    params: BehaviorSubject<any>,
+    params: BehaviorSubject<{ id: string }>,
     router: Router;
   beforeEach(() => {
-    api = jasmine.createSpyObj('api', [
+    api = jasmine.createSpyObj<Pick<DataService,
+      'getProcessInstance' | 'getActivityInstance' | 'getProcessDefinition' | 'getVariableInstance'>>('api', [
       'getProcessInstance',
       'getActivityInstance',
       'getProcessDefinition',
       'getVariableInstance'
     ]);
-    api.getProcessInstance.and.callFake((id) =>
+    api.getProcessInstance.and.callFake((id: string) =>
       of(Object.assign({}, process, { processInstanceId: id }))
     );
     api.getActivityInstance.and.callFake(() => of([activity]));
@@ -102,7 +107,7 @@ describe('Process inspection', () => {
     fixture.detectChanges();
   }
   it('renders process, activity and variable data and imports XML after activities resolve', fakeAsync(() => {
-    const activities = new Subject<any[]>();
+    const activities = new Subject<ActivityInstance[]>();
     api.getActivityInstance.and.returnValue(activities);
     fixture.detectChanges();
     tick();
@@ -128,10 +133,10 @@ describe('Process inspection', () => {
   it('names zoom controls and hides decorative icon text', fakeAsync(() => {
     start();
     const buttons = fixture.nativeElement.querySelectorAll('button.zoomButton');
-    expect(Array.prototype.map.call(buttons, button => button.getAttribute('aria-label')))
+    expect(Array.prototype.map.call(buttons, (button: HTMLButtonElement) => button.getAttribute('aria-label')))
       .toEqual(['Zoom in', 'Zoom out', 'Reset zoom']);
-    Array.prototype.forEach.call(buttons, button => {
-      expect(button.querySelector('mat-icon').getAttribute('aria-hidden')).toBe('true');
+    Array.prototype.forEach.call(buttons, (button: HTMLButtonElement) => {
+      expect((button.querySelector('mat-icon') as HTMLElement).getAttribute('aria-hidden')).toBe('true');
     });
   }));
   it('provides a named table link for drilldown and plain text for empty process IDs', fakeAsync(() => {
@@ -159,14 +164,14 @@ describe('Process inspection', () => {
     params.next({ id: 'process-2' });
     tick();
     fixture.detectChanges();
-    expect(component.processInstance.processInstanceId).toBe('process-2');
+    expect((component.processInstance && component.processInstance.processInstanceId)).toBe('process-2');
     expect(api.getVariableInstance).toHaveBeenCalledWith('process-2');
   }));
   [
-    'getProcessInstance',
-    'getActivityInstance',
-    'getProcessDefinition',
-    'getVariableInstance'
+    'getProcessInstance' as 'getProcessInstance',
+    'getActivityInstance' as 'getActivityInstance',
+    'getProcessDefinition' as 'getProcessDefinition',
+    'getVariableInstance' as 'getVariableInstance'
   ].forEach((method) =>
     it(
       'reports ' + method + ' failure without leaving loading active',
@@ -204,8 +209,8 @@ describe('Process inspection', () => {
     expect(api.getProcessInstance).not.toHaveBeenCalled();
   }));
   it('keeps route B when process A responds later', fakeAsync(() => {
-    const pending = new Subject<any>();
-    api.getProcessInstance.and.callFake(id => id === 'process-1' ? pending :
+    const pending = new Subject<ProcessInstanceDetail>();
+    api.getProcessInstance.and.callFake((id: string) => id === 'process-1' ? pending :
       of(Object.assign({}, process, { processInstanceId: id })));
     fixture.detectChanges();
     tick();
@@ -214,32 +219,34 @@ describe('Process inspection', () => {
     pending.next(process);
     pending.complete();
     fixture.detectChanges();
-    expect(component.processInstance.processInstanceId).toBe('process-2');
+    expect((component.processInstance && component.processInstance.processInstanceId)).toBe('process-2');
     expect(fixture.nativeElement.textContent).toContain('process-2');
   }));
   it('keeps B activities, definition and variables when A finishes later', fakeAsync(() => {
-    const oldActivities = new Subject<any[]>(), oldDefinition = new Subject<any>(), oldVariables = new Subject<any[]>();
+    const oldActivities = new Subject<ActivityInstance[]>(), oldDefinition = new Subject<ProcessDefinitionDetail>(),
+      oldVariables = new Subject<VariableInstance[]>();
     api.getActivityInstance.and.returnValues(oldActivities, of([Object.assign({}, activity, { activityName: 'Current' })]));
     api.getProcessDefinition.and.returnValues(oldDefinition, of({ processDefinitionXml: '<current/>' }));
     api.getVariableInstance.and.returnValues(oldVariables, of([{ name: 'current', type: 'String', value: 'B' }]));
     start(); params.next({ id: 'process-2' }); tick();
     oldActivities.next([activity]); oldActivities.complete();
-    oldDefinition.next({ processDefinitionXml: '<obsolete/>' }); oldDefinition.complete();
+    oldDefinition.next({ processDefinitionId: 'definition-1', processDefinitionXml: '<obsolete/>' }); oldDefinition.complete();
     oldVariables.next([{ name: 'obsolete', type: 'String', value: 'A' }]);
     expect(component.activityInstance[0].activityName).toBe('Current');
-    expect(component.processDefinition.processDefinitionXml).toBe('<current/>');
+    expect((component.processDefinition && component.processDefinition.processDefinitionXml)).toBe('<current/>');
     expect(component.variableInstance[0].name).toBe('current');
     expect(allViewers[1].importXML).toHaveBeenCalledWith('<current/>', jasmine.any(Function));
   }));
   it('cancels all pending route requests on destruction', fakeAsync(() => {
-    const activities = new Subject<any[]>(), definition = new Subject<any>(), variables = new Subject<any[]>();
+    const activities = new Subject<ActivityInstance[]>(), definition = new Subject<ProcessDefinitionDetail>(),
+      variables = new Subject<VariableInstance[]>();
     api.getActivityInstance.and.returnValue(activities);
     api.getProcessDefinition.and.returnValue(definition);
     api.getVariableInstance.and.returnValue(variables);
     start();
     fixture.destroy();
     activities.next([activity]); activities.complete();
-    definition.next({ processDefinitionXml: 'late' }); definition.complete();
+    definition.next({ processDefinitionId: 'definition-1', processDefinitionXml: 'late' }); definition.complete();
     variables.next([{ name: 'late', type: 'String', value: 'late' }]);
     expect(component.activityInstance).toEqual([]);
     expect(component.variableInstance).toEqual([]);
@@ -248,13 +255,13 @@ describe('Process inspection', () => {
     expect(activities.observers.length + definition.observers.length + variables.observers.length).toBe(0);
   }));
   it('disposes A before creating B and ignores a late XML import callback', fakeAsync(() => {
-    let finish: (error: Error) => void;
-    viewer.importXML.and.callFake((xml, done) => finish = done);
+    let finish: (error: Error | null | undefined) => void = () => fail('expected a pending import');
+    viewer.importXML.and.callFake((xml: string, done: (error: Error | null | undefined) => void) => finish = done);
     start();
     expect(spinner.hide).not.toHaveBeenCalled();
-    let finishCurrent: (error: Error) => void;
+    let finishCurrent: (error: Error | null | undefined) => void = () => fail('expected the current import');
     const current = new BpmnViewerStub();
-    current.importXML.and.callFake((xml, done) => finishCurrent = done);
+    current.importXML.and.callFake((xml: string, done: (error: Error | null | undefined) => void) => finishCurrent = done);
     viewers.create.and.callFake(() => { allViewers.push(current); return current; });
     params.next({ id: 'process-2' });
     tick();
@@ -273,10 +280,10 @@ describe('Process inspection', () => {
     expect(current.destroy).toHaveBeenCalledTimes(1);
   }));
   it('ignores duplicate import completion callbacks', fakeAsync(() => {
-    let finish: (error: Error) => void;
-    viewer.importXML.and.callFake((xml, done) => finish = done);
+    let finish: (error: Error | null | undefined) => void = () => fail('expected a pending import');
+    viewer.importXML.and.callFake((xml: string, done: (error: Error | null | undefined) => void) => finish = done);
     start();
-    finish(null); finish(null);
+    finish(undefined); finish(null);
     expect(viewer.canvas.addMarker).toHaveBeenCalledTimes(1);
   }));
   it('does not navigate through an overlay retained from the previous route', fakeAsync(() => {
@@ -287,8 +294,8 @@ describe('Process inspection', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   }));
   it('ignores a late import after navigation away', fakeAsync(() => {
-    let finish: (error: Error) => void;
-    viewer.importXML.and.callFake((xml, done) => finish = done);
+    let finish: (error: Error | null | undefined) => void = () => fail('expected a pending import');
+    viewer.importXML.and.callFake((xml: string, done: (error: Error | null | undefined) => void) => finish = done);
     start();
     fixture.destroy();
     finish(null);
@@ -333,6 +340,14 @@ describe('Process inspection', () => {
       expect(viewer.canvas.addMarker).toHaveBeenCalled();
     }));
   });
+  it('starts no work when the canvas view is absent', fakeAsync(() => {
+    component.elementReference = undefined;
+    component.ngAfterViewInit();
+    tick();
+    expect(viewers.create).not.toHaveBeenCalled();
+    expect(api.getProcessInstance).not.toHaveBeenCalled();
+    expect(spinner.show).not.toHaveBeenCalled();
+  }));
   it('allows zoom buttons before loading and after destruction', () => {
     component.zoomIn(); component.zoomOut(); component.resetZoom();
     expect(viewer.zoomScroll.zoom).not.toHaveBeenCalled();

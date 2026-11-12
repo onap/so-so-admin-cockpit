@@ -21,14 +21,22 @@ SPDX-License-Identifier: Apache-2.0
 @authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com
 */
 
+export type SearchFilter = [string, string];
+export interface SearchFilters {
+  serviceInstanceId?: SearchFilter;
+  requestId?: SearchFilter;
+  serviceInstanceName?: SearchFilter;
+  requestStatus?: ['EQ', string];
+}
+
 export class SearchRequest {
 
-  constructor(private filter: {}, private startTimeInMilliseconds: number, private endTimeInMilliseconds: number) {
+  constructor(private filter: SearchFilters, private startTimeInMilliseconds: number, private endTimeInMilliseconds: number) {
 
   }
 
 
-  public getFilters(): {} {
+  public getFilters(): SearchFilters {
     return this.filter;
   }
 

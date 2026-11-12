@@ -20,6 +20,9 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { RecipeDialogData } from '../model/recipe-dialog.model';
+import { RecipeSaveResponse } from '../model/api-response.model';
+import { serviceRecipe, networkRecipe, vnfRecipe } from '../testing/api-fixtures';
 import { RecipeComponent } from './recipe.component';
 import { DataService } from '../data.service';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
@@ -32,20 +35,21 @@ import {
   notificationStub,
   spinnerStub
 } from '../testing/component-test';
-['Service', 'Network', 'VNF'].forEach((type) =>
+(['Service', 'Network', 'VNF'] as Array<'Service' | 'Network' | 'VNF'>).forEach((type) =>
   describe(type + ' recipe form', () => {
     let fixture: ComponentFixture<RecipeComponent>,
       component: RecipeComponent,
-      api: any,
-      popup: any,
-      ref: any,
-      parent: any;
+      api: jasmine.SpyObj<Pick<DataService, 'saveServiceRecipe'>>,
+      popup: jasmine.SpyObj<Pick<ToastrNotificationService, 'error' | 'info'>>,
+      ref: { close: jasmine.Spy },
+      parent: RecipeDialogData;
     beforeEach(() => {
-      api = jasmine.createSpyObj('api', ['saveServiceRecipe']);
+      api = jasmine.createSpyObj<Pick<DataService, 'saveServiceRecipe'>>('api', ['saveServiceRecipe']);
       api.saveServiceRecipe.and.returnValue(of({ id: '1' }));
       popup = notificationStub();
       ref = { close: jasmine.createSpy('close') };
-      parent = { tab: type + ' Recipe', addNew: true, fData: {} };
+      parent = type === 'Service' ? { tab: 'Service Recipe', addNew: true } :
+        type === 'Network' ? { tab: 'Network Recipe', addNew: true } : { tab: 'VNF Recipe', addNew: true };
       TestBed.configureTestingModule({
         imports: componentImports,
         declarations: [RecipeComponent],
@@ -62,7 +66,7 @@ import {
       fixture.detectChanges();
     });
     function fill() {
-      const values = {
+      const values: { [name: string]: string } = {
         modelName: 'demo',
         nfRole: 'firewall',
         recipeTimeout: '60',
@@ -72,8 +76,8 @@ import {
       };
       Array.prototype.forEach.call(
         fixture.nativeElement.querySelectorAll('input'),
-        (input) => {
-          input.value = values[input.getAttribute('formControlName')];
+        (input: HTMLInputElement) => {
+          input.value = values[input.getAttribute('formControlName') || ''];
           input.dispatchEvent(new Event('input'));
         }
       );
@@ -81,7 +85,8 @@ import {
     }
     function prefill(uri: string) {
       parent.addNew = false;
-      parent.fData = {
+      const original = type === 'Service' ? serviceRecipe : type === 'Network' ? networkRecipe : vnfRecipe;
+      parent.fData = Object.assign({}, original, {
         serviceModelUUID: 'service-version',
         versionStr: 'other-version',
         modelName: 'existing',
@@ -89,7 +94,7 @@ import {
         action: 'delete',
         orchestrationUri: uri,
         recipeTimeout: '90'
-      };
+      });
       component.parentData = parent;
       component.createFormControls();
       component.createForm();
@@ -101,7 +106,7 @@ import {
     }
     it('labels every recipe input and describes required errors after submit', () => {
       submit();
-      Array.prototype.forEach.call(fixture.nativeElement.querySelectorAll('input'), input => {
+      Array.prototype.forEach.call(fixture.nativeElement.querySelectorAll('input'), (input: HTMLInputElement) => {
         const label = fixture.nativeElement.querySelector('label[for="' + input.id + '"]');
         expect(label).not.toBeNull();
         expect(label.control).toBe(input);
@@ -114,13 +119,32 @@ import {
       });
       expect(fixture.nativeElement.querySelector('[aria-live="polite"]')).not.toBeNull();
     });
+    it('omits hidden required errors from valid field descriptions', () => {
+      fill();
+      Array.prototype.forEach.call(fixture.nativeElement.querySelectorAll('input[required]'), (input: HTMLInputElement) => {
+        expect(input.getAttribute('aria-describedby')).toBeNull();
+      });
+      const timeout = fixture.nativeElement.querySelector('#recipe-recipeTimeout');
+      if (timeout) { expect(timeout.getAttribute('aria-describedby')).toBe('recipe-timeout-help'); }
+    });
+    it('describes a touched invalid field only while its error is visible', () => {
+      component.modelVersionId.markAsTouched();
+      fixture.detectChanges();
+      const input = fixture.nativeElement.querySelector('#recipe-modelVersionId');
+      expect(input.getAttribute('aria-describedby')).toBe('recipe-modelVersionId-error');
+      expect(fixture.nativeElement.querySelector('#recipe-modelVersionId-error').style.visibility).toBe('visible');
+      component.modelVersionId.setValue('valid-id');
+      fixture.detectChanges();
+      expect(input.getAttribute('aria-describedby')).toBeNull();
+      expect(fixture.nativeElement.querySelector('#recipe-modelVersionId-error').style.visibility).toBe('hidden');
+    });
     it('rejects an empty required form', () => {
       submit();
       expect(api.saveServiceRecipe).not.toHaveBeenCalled();
       expect(popup.error).toHaveBeenCalledWith('Please fill valid data.');
       ['modelVersionId', 'operation', 'orchestrationFlow'].forEach(name => {
-        expect(component.myform.get(name).hasError('required')).toBe(true);
-        expect(component.myform.get(name).touched).toBe(true);
+        expect(component.myform.controls[name].hasError('required')).toBe(true);
+        expect(component.myform.controls[name].touched).toBe(true);
       });
       if (type === 'Network') {
         expect(component.modelName.hasError('required')).toBe(true);
@@ -135,9 +159,9 @@ import {
       expect(body.modelVersionId).toBe('uuid');
       expect(body.operation).toBe('create');
       expect(body.orchestrationFlow).toBe('/flow');
-      if (type === 'Service') expect(body.recipeTimeout).toBe('60');
-      if (type === 'Network') expect(body.modelName).toBe('demo');
-      if (type === 'VNF') expect(body.nfRole).toBe('firewall');
+      if (type === 'Service') { expect(body.recipeTimeout).toBe('60'); }
+      if (type === 'Network') { expect(body.modelName).toBe('demo'); }
+      if (type === 'VNF') { expect(body.nfRole).toBe('firewall'); }
       expect(api.saveServiceRecipe.calls.count()).toBe(1);
       expect(popup.info).toHaveBeenCalledWith('Data stored in database.');
       expect(ref.close).toHaveBeenCalledWith({ saved: true });
@@ -189,11 +213,11 @@ import {
       expect(component.myform.value.modelVersionId).toBe('uuid');
     });
     it('ignores populated recipe data when adding a recipe', () => {
-      parent.fData = {
+      parent.fData = Object.assign({}, serviceRecipe, networkRecipe, vnfRecipe, {
         serviceModelUUID: 'existing-service', versionStr: 'existing-version',
         modelName: 'existing', nfRole: 'role', recipeTimeout: '90',
         action: 'delete', orchestrationUri: '/mso/async/services/old'
-      };
+      });
       component.createFormControls();
       component.createForm();
       fixture.detectChanges();
@@ -229,7 +253,7 @@ import {
       expect(component.recipeTimeout.value).toBe('later');
     });
     it('guards repeated submissions while the save is pending', () => {
-      const pending = new Subject<any>();
+      const pending = new Subject<RecipeSaveResponse | null>();
       api.saveServiceRecipe.and.returnValue(pending);
       fill();
       const values = component.myform.value;
@@ -330,8 +354,8 @@ import {
         type === 'Service' ? 'service-version' : 'other-version'
       );
       expect(component.myform.value.operation).toBe('delete');
-      if (type === 'VNF') expect(component.myform.value.nfRole).toBe('role');
-      if (type === 'Network') expect(component.myform.value.modelName).toBe('existing');
+      if (type === 'VNF') { expect(component.myform.value.nfRole).toBe('role'); }
+      if (type === 'Network') { expect(component.myform.value.modelName).toBe('existing'); }
       expect(component.myform.value.recipeTimeout).toBe('90');
       expect(component.myform.value.orchestrationFlow).toBe('old');
       submit();

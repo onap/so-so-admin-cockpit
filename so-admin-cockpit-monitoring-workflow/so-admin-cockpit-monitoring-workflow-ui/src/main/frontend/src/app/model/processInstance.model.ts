@@ -24,5 +24,5 @@ export interface ProcessInstanceDetail {
   processInstanceId: string;
   processDefinitionId: string;
   processDefinitionName: string;
-  superProcessInstanceId: string;
+  superProcessInstanceId: string | null;
 }

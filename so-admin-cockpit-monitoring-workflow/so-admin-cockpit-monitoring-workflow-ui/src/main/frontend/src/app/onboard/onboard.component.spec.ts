@@ -29,6 +29,7 @@ import { OnboardComponent } from './onboard.component';
 import { DataService } from '../data.service';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
 import { NgxSpinnerService } from 'ngx-spinner';
+import { RecipeTab } from '../model/recipe-dialog.model';
 import { MatDialog } from '@angular/material';
 import { serviceRecipe, networkRecipe, vnfRecipe } from '../testing/api-fixtures';
 import { of, throwError } from 'rxjs';
@@ -40,12 +41,12 @@ import {
 describe('Workflow onboarding', () => {
   let component: OnboardComponent,
     fixture: ComponentFixture<OnboardComponent>,
-    api: any,
-    popup: any,
-    spinner: any,
-    dialog: any;
+    api: jasmine.SpyObj<Pick<DataService, 'getServiceRecipe' | 'getNetworkRecipe' | 'getVnfRecipe' | 'onboardBPMNInfra'>>,
+    popup: jasmine.SpyObj<Pick<ToastrNotificationService, 'error' | 'info'>>,
+    spinner: NgxSpinnerService & { show: jasmine.Spy; hide: jasmine.Spy },
+    dialog: jasmine.SpyObj<Pick<MatDialog, 'open'>>;
   beforeEach(() => {
-    api = jasmine.createSpyObj('api', [
+    api = jasmine.createSpyObj<Pick<DataService, 'getServiceRecipe' | 'getNetworkRecipe' | 'getVnfRecipe' | 'onboardBPMNInfra'>>('api', [
       'getServiceRecipe',
       'getNetworkRecipe',
       'getVnfRecipe',
@@ -80,9 +81,9 @@ describe('Workflow onboarding', () => {
     fixture.detectChanges();
   });
   function choose(name?: string) {
-    component.beforeUpload({
-      currentTarget: { files: name ? [new File(['archive'], name)] : [] }
-    });
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('#recipe-war');
+    Object.defineProperty(input, 'files', { value: name ? [new File(['archive'], name)] : [], configurable: true });
+    input.dispatchEvent(new Event('change'));
   }
   it('renders the initial service list', () => {
     expect(fixture.nativeElement.textContent).toContain('service-uuid');
@@ -123,7 +124,7 @@ describe('Workflow onboarding', () => {
       expect(api.getVnfRecipe).not.toHaveBeenCalled();
     });
   });
-  ['Service Recipe', 'Network Recipe', 'VNF Recipe'].forEach((tab: any) => {
+  (['Service Recipe', 'Network Recipe', 'VNF Recipe'] as RecipeTab[]).forEach((tab) => {
     it('reloads only the selected ' + tab + ' after a confirmed save', () => {
       dialog.open.and.returnValue({ afterClosed: () => of({ saved: true }) });
       component.currentTab = tab;
@@ -182,11 +183,12 @@ describe('Workflow onboarding', () => {
     expect(popup.error).toHaveBeenCalled();
     expect(spinner.hide).toHaveBeenCalled();
   });
-  [
+  const recipeLists: Array<['getServiceRecipe' | 'getNetworkRecipe' | 'getVnfRecipe', string]> = [
     ['getServiceRecipe', 'service'],
     ['getNetworkRecipe', 'network'],
     ['getVnfRecipe', 'VNF']
-  ].forEach(([method, label]) => {
+  ];
+  recipeLists.forEach(([method, label]) => {
     [{ errMsg: 'Unable to process.' }, null].forEach((body) => {
       it('reports a ' + label + ' list application failure once: ' + JSON.stringify(body), () => {
         api[method].and.returnValue(of(body));
@@ -225,7 +227,7 @@ describe('Workflow onboarding', () => {
       expect(success ? popup.info : popup.error).toHaveBeenCalledWith(message);
     });
   });
-  ['Service Recipe', 'VNF Recipe'].forEach((tab: any) => {
+  (['Service Recipe', 'VNF Recipe'] as RecipeTab[]).forEach((tab) => {
     it('opens a typed empty dialog for ' + tab, () => {
       component.currentTab = tab;
       component.addRecipe();
@@ -276,7 +278,7 @@ describe('Workflow onboarding', () => {
       fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
       await fixture.whenStable(); fixture.detectChanges();
       const modify = Array.prototype.find.call(fixture.nativeElement.querySelectorAll('button'),
-        button => button.textContent.trim() === 'Modify');
+        (button: HTMLButtonElement) => (button.textContent || '').trim() === 'Modify');
       modify.click();
       expect(dialog.open.calls.mostRecent().args[1].data).toEqual({
         tab: testCase.tab, addNew: false, fData: testCase.recipe

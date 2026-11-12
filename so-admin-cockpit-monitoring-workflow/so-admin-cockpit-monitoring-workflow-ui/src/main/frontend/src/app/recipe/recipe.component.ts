@@ -2,7 +2,7 @@ import { Component, OnInit, Inject } from '@angular/core';
 import { DataService } from '../data.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs/operators';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -16,21 +16,20 @@ import { RecipeRequest } from '../model/recipeRequest.model';
 })
 export class RecipeComponent implements OnInit {
 
-  constructor(private data: DataService, private spinner: NgxSpinnerService, private http: HttpClient,
-    private popup: ToastrNotificationService,public dialogRef: MatDialogRef<RecipeComponent, RecipeDialogResult>,
+  constructor(private data: DataService, private spinner: NgxSpinnerService,
+    private popup: ToastrNotificationService, public dialogRef: MatDialogRef<RecipeComponent, RecipeDialogResult>,
     @Inject(MAT_DIALOG_DATA) public parentData: RecipeDialogData) { }
 
-  fileList = [];
-  myform: FormGroup;
-  modelName: FormControl;
-  recipeTimeout: FormControl;
-  nfRole: FormControl;
-  modelVersionId: FormControl;
-  operation: FormControl;
-  orchestrationFlow: FormControl;
-  isCancel: boolean = false;
-  isSaving: boolean = false;
-  saveError: string = '';
+  myform = new FormGroup({});
+  modelName = new FormControl('');
+  recipeTimeout = new FormControl('');
+  nfRole = new FormControl('');
+  modelVersionId = new FormControl('');
+  operation = new FormControl('');
+  orchestrationFlow = new FormControl('');
+  isCancel = false;
+  isSaving = false;
+  saveError = '';
   modeType: RecipeTab = this.parentData.tab;
   private prefilledFlow?: string;
 
@@ -55,15 +54,15 @@ export class RecipeComponent implements OnInit {
       this.operation.setValue(dialogData.fData.action);
       this.prefilledFlow = this.flowSuffix(dialogData.fData.orchestrationUri);
       this.orchestrationFlow.setValue(this.prefilledFlow);
-      if (dialogData.tab === 'Service Recipe') {
+      if (dialogData.tab === 'Service Recipe' && dialogData.fData) {
         this.modelVersionId.setValue(dialogData.fData.serviceModelUUID);
-      } else {
+      } else if (dialogData.tab !== 'Service Recipe' && dialogData.fData) {
         this.modelVersionId.setValue(dialogData.fData.versionStr);
       }
-      if (dialogData.tab === 'Network Recipe') {
+      if (dialogData.tab === 'Network Recipe' && dialogData.fData) {
         this.modelName.setValue(dialogData.fData.modelName);
       }
-      if (dialogData.tab === 'VNF Recipe') {
+      if (dialogData.tab === 'VNF Recipe' && dialogData.fData) {
         this.nfRole.setValue(dialogData.fData.nfRole);
       }
     }
@@ -74,12 +73,12 @@ export class RecipeComponent implements OnInit {
   }
 
   getModelType (type: RecipeTab): RecipeRequest['modelType'] {
-    if(type == 'Service Recipe') {
-      return 'Service'
-    } else if(type == 'Network Recipe') {
-      return 'Network'
+    if (type === 'Service Recipe') {
+      return 'Service';
+    } else if (type === 'Network Recipe') {
+      return 'Network';
     } else {
-      return 'Vnf'
+      return 'Vnf';
     }
   }
 
@@ -103,7 +102,10 @@ export class RecipeComponent implements OnInit {
       this.popup.error('Please fill valid data.');
       return;
     }
-    const values = this.myform.value;
+    const values: {
+      modelName: string; nfRole: string; recipeTimeout: string;
+      modelVersionId: string; operation: string; orchestrationFlow: string;
+    } = this.myform.value;
     const data: RecipeRequest = {
       modelType: this.getModelType(this.parentData.tab),
       modelVersionId: values.modelVersionId,
@@ -118,7 +120,7 @@ export class RecipeComponent implements OnInit {
     this.saveServiceRecipes(data);
   }
 
-  closeDialog(evt: any): void {
+  closeDialog(): void {
     this.isCancel = true;
     this.dialogRef.close({ saved: false });
   }

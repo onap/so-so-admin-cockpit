@@ -33,10 +33,13 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DetailsComponent } from './details/details.component';
 import { ToastrNotificationService } from './toastr-notification-service.service';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatTabsModule, MatSelectModule, MatNativeDateModule, MatDatepickerModule, MatCardModule, MatPaginatorModule, MatSortModule, MatIconModule } from '@angular/material';
+import {
+  MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatTabsModule, MatSelectModule,
+  MatNativeDateModule, MatDatepickerModule, MatCardModule, MatPaginatorModule, MatSortModule, MatIconModule
+} from '@angular/material';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { OnboardComponent } from './onboard/onboard.component';
-import { RecipeComponent } from './recipe/recipe.component'
+import { RecipeComponent } from './recipe/recipe.component';
 
 @NgModule({
   declarations: [

@@ -36,7 +36,7 @@ export interface BpmnOverlays {
 }
 export interface BpmnZoomScroll { zoom(step: number, center: { x: number; y: number }): void; }
 interface ViewerHandle {
-  importXML(xml: string, done: (error: Error | null) => void): void;
+  importXML(xml: string, done: (error: Error | null | undefined) => void): void;
   get(name: 'canvas'): BpmnCanvas;
   get(name: 'elementRegistry'): BpmnRegistry;
   get(name: 'overlays'): BpmnOverlays;
@@ -44,30 +44,36 @@ interface ViewerHandle {
   destroy(): void;
 }
 export interface BpmnViewerAdapter extends ViewerHandle {
-  addDrilldown(activityId: string, processId: string, navigate: (id: string) => void, activityName?: string): void;
+  addDrilldown(activityId: string, processId: string | null, navigate: (id: string) => void, activityName?: string): void;
 }
 
 class ManagedViewer implements BpmnViewerAdapter {
   private disposed = false;
   private handlers: { node: HTMLElement; click: EventListener }[] = [];
   constructor(private viewer: ViewerHandle) {}
-  importXML(xml: string, done: (error: Error | null) => void) { this.viewer.importXML(xml, done); }
+  importXML(xml: string, done: (error: Error | null | undefined) => void) { this.viewer.importXML(xml, done); }
   get(name: 'canvas'): BpmnCanvas;
   get(name: 'elementRegistry'): BpmnRegistry;
   get(name: 'overlays'): BpmnOverlays;
   get(name: 'zoomScroll'): BpmnZoomScroll;
   get(name: string): BpmnCanvas | BpmnRegistry | BpmnOverlays | BpmnZoomScroll {
-    // The installed viewer exposes dynamically named services.
-    return this.viewer.get(name as 'canvas');
+    switch (name) {
+      case 'canvas': return this.viewer.get('canvas');
+      case 'elementRegistry': return this.viewer.get('elementRegistry');
+      case 'overlays': return this.viewer.get('overlays');
+      case 'zoomScroll': return this.viewer.get('zoomScroll');
+      default: throw new Error('Unsupported viewer service: ' + name);
+    }
   }
-  addDrilldown(activityId: string, processId: string, navigate: (id: string) => void, activityName?: string) {
+  addDrilldown(activityId: string, processId: string | null, navigate: (id: string) => void, activityName?: string) {
     const element = this.get('elementRegistry').get(activityId);
     if (!element || !processId || !processId.trim()) { return; }
     const node = document.createElement('button');
     node.className = 'highlight-overlay';
     node.type = 'button';
-    node.setAttribute('aria-label', 'Open process ' + processId + ' for ' + (activityName || activityId));
-    node.title = node.getAttribute('aria-label');
+    const label = 'Open process ' + processId + ' for ' + (activityName || activityId);
+    node.setAttribute('aria-label', label);
+    node.title = label;
     node.style.width = element.width + 'px';
     node.style.height = element.height + 'px';
     node.style.cursor = 'pointer';
@@ -88,7 +94,7 @@ class ManagedViewer implements BpmnViewerAdapter {
 @Injectable({ providedIn: 'root' })
 export class BpmnViewerService {
   create(container: HTMLElement): BpmnViewerAdapter {
-    // Localize the legacy untyped package boundary to this adapter.
+    // The declaration covers only the installed viewer surface used by this adapter.
     // diagram-js 2 leaves its deferred viewbox timer alive after destroy().
     // Synchronous viewbox updates prevent callbacks from touching a disposed canvas.
     const viewer: ViewerHandle = new Viewer({ container, canvas: { deferUpdate: false } });

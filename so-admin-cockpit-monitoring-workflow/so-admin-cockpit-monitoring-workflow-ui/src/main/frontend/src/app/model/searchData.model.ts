@@ -1,5 +1,3 @@
-import { ToastrNotificationService } from "../toastr-notification-service.service";
-
 /**
 ============LICENSE_START=======================================================
  Copyright (C) 2018 Ericsson. All rights reserved.
@@ -23,85 +21,85 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import { Observable, throwError, of } from 'rxjs';
-import { SearchRequest } from "./SearchRequest.model";
-import { Input } from "@angular/core";
+import { SearchRequest, SearchFilters } from './SearchRequest.model';
+import { Input } from '@angular/core';
 
 export class SearchData {
 
-  @Input() selectedValueSII = "EQ";
-  @Input() selectedValueRI = "EQ";
-  @Input() selectedValueSN = "EQ";
-  @Input() selectedValueSTATUS = "ALL";
+  @Input() selectedValueSII = 'EQ';
+  @Input() selectedValueRI = 'EQ';
+  @Input() selectedValueSN = 'EQ';
+  @Input() selectedValueSTATUS = 'ALL';
 
   private now = Date.now();
+  private initialStartDate = new Date(this.now - (1 * 60 * 60 * 1000));
+  private initialEndDate = new Date(this.now);
   // Minus 1 hour from current time for start date
-  @Input() startDate = new Date(this.now - (1 * 60 * 60 * 1000));
-  @Input() selectedStartHour = this.getNumberAsString(this.startDate.getHours());
-  @Input() selectedStartMinute = this.getNumberAsString(this.startDate.getMinutes());
+  @Input() startDate: Date | null = this.initialStartDate;
+  @Input() selectedStartHour = this.getNumberAsString(this.initialStartDate.getHours());
+  @Input() selectedStartMinute = this.getNumberAsString(this.initialStartDate.getMinutes());
 
-  @Input() endDate = new Date(this.now);
-  @Input() selectedEndHour = this.getNumberAsString(this.endDate.getHours());
-  @Input() selectedEndMinute = this.getNumberAsString(this.endDate.getMinutes());
+  @Input() endDate: Date | null = this.initialEndDate;
+  @Input() selectedEndHour = this.getNumberAsString(this.initialEndDate.getHours());
+  @Input() selectedEndMinute = this.getNumberAsString(this.initialEndDate.getMinutes());
 
 
-  @Input() serviceInstanceId: string;
-  @Input() requestId: string;
-  @Input() serviceInstanceName: string;
+  @Input() serviceInstanceId = '';
+  @Input() requestId = '';
+  @Input() serviceInstanceName = '';
 
-  private startTimeInMilliseconds: number;
-  private endTimeInMilliseconds: number;
 
   constructor() {
   }
 
   public getSearchRequest(): Observable<SearchRequest> {
-    var searchFields = {};
+    const searchFields: SearchFilters = {};
     if ((!this.startDate || this.startDate === null) || (!this.endDate || this.endDate === null)) {
-      console.error("Found either start time or end time null or undefined");
-      return throwError("Found end or start date empty, Please enter start and end date");
+      console.error('Found either start time or end time null or undefined');
+      return throwError('Found end or start date empty, Please enter start and end date');
     }
 
-    this.startDate.setHours(parseInt(this.selectedStartHour));
-    this.startDate.setMinutes(parseInt(this.selectedStartMinute));
+    this.startDate.setHours(parseInt(this.selectedStartHour, 10));
+    this.startDate.setMinutes(parseInt(this.selectedStartMinute, 10));
 
-    this.endDate.setHours(parseInt(this.selectedEndHour));
-    this.endDate.setMinutes(parseInt(this.selectedEndMinute));
+    this.endDate.setHours(parseInt(this.selectedEndHour, 10));
+    this.endDate.setMinutes(parseInt(this.selectedEndMinute, 10));
 
-    this.startTimeInMilliseconds = this.startDate.getTime();
-    this.endTimeInMilliseconds = this.endDate.getTime();
+    const startTimeInMilliseconds = this.startDate.getTime();
+    const endTimeInMilliseconds = this.endDate.getTime();
 
-    if (this.startTimeInMilliseconds > this.endTimeInMilliseconds) {
-      console.error("End time: " + this.endDate + " can not be greater then start time: " + this.startDate);
-      return throwError("End time: " + this.endDate + " can not be greater then start time: " + this.startDate);
+    if (startTimeInMilliseconds > endTimeInMilliseconds) {
+      console.error('End time: ' + this.endDate + ' can not be greater then start time: ' + this.startDate);
+      return throwError('End time: ' + this.endDate + ' can not be greater then start time: ' + this.startDate);
     }
 
 
     if (!this.isEmpty(this.selectedValueSII) && !this.isEmpty(this.serviceInstanceId)) {
-      searchFields["serviceInstanceId"] = [this.selectedValueSII, this.serviceInstanceId]
+      searchFields['serviceInstanceId'] = [this.selectedValueSII, this.serviceInstanceId];
     }
     if (!this.isEmpty(this.selectedValueRI) && !this.isEmpty(this.requestId)) {
-      searchFields["requestId"] = [this.selectedValueRI, this.requestId]
+      searchFields['requestId'] = [this.selectedValueRI, this.requestId];
     }
     if (!this.isEmpty(this.selectedValueSN) && !this.isEmpty(this.serviceInstanceName)) {
-      searchFields["serviceInstanceName"] = [this.selectedValueSN, this.serviceInstanceName]
+      searchFields['serviceInstanceName'] = [this.selectedValueSN, this.serviceInstanceName];
     }
 
-    if (!this.isEmpty(this.selectedValueSTATUS) && this.selectedValueSTATUS !== "ALL") {
-      searchFields["requestStatus"] = ["EQ", this.selectedValueSTATUS]
+    if (!this.isEmpty(this.selectedValueSTATUS) && this.selectedValueSTATUS !== 'ALL') {
+      searchFields['requestStatus'] = ['EQ', this.selectedValueSTATUS];
     }
 
-    return of(new SearchRequest(searchFields, this.startTimeInMilliseconds, this.endTimeInMilliseconds));
+    return of(new SearchRequest(searchFields, startTimeInMilliseconds, endTimeInMilliseconds));
   }
 
-  private isEmpty(str) {
+  private isEmpty(str: string) {
     return (!str || 0 === str.length);
   }
 
   private getNumberAsString(num: number) {
     if (num <= 9) {
-      return "0" + num;
+      return '0' + num;
     }
-    return "" + num;
+    return '' + num;
   }
 
 }

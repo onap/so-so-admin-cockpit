@@ -1,7 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { DataService } from '../data.service';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { HttpClient } from '@angular/common/http';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
 import { MatPaginator, MatSort, MatTableDataSource, MatTabChangeEvent } from '@angular/material';
 import { ServiceRecipe } from '../model/serviceRecipe.model';
@@ -19,25 +18,25 @@ import { RecipeDialogData, RecipeDialogResult, RecipeTab } from '../model/recipe
 })
 export class OnboardComponent implements OnInit {
 
-  constructor(private data: DataService, private spinner: NgxSpinnerService, private http: HttpClient,
+  constructor(private data: DataService, private spinner: NgxSpinnerService,
     private popup: ToastrNotificationService, public dialog: MatDialog) { }
 
-  fileList = [];
-  serviceRecipe: MatTableDataSource<ServiceRecipe>;
-  networkRecipe: MatTableDataSource<NetworkRecipe>;
-  vnfRecipe: MatTableDataSource<VnfRecipe>;
+  fileList: File[] = [];
+  serviceRecipe = new MatTableDataSource<ServiceRecipe>();
+  networkRecipe = new MatTableDataSource<NetworkRecipe>();
+  vnfRecipe = new MatTableDataSource<VnfRecipe>();
 
   displayedServiceColumns = Constants.DISPLAYED_COLUMNS_SERVICE;
   displayedNetworkColumns = Constants.DISPLAYED_COLUMNS_NETWORK;
   displayedVnfColumns = Constants.DISPLAYED_COLUMNS_VNF;
   pageSizeOptions = Constants.DEFAULT_PAGE_SIZE_OPTIONS;
-  currentTab: RecipeTab = 'Service Recipe'
+  currentTab: RecipeTab = 'Service Recipe';
 
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatPaginator) paginator?: MatPaginator;
+  @ViewChild(MatSort) sort?: MatSort;
 
   ngOnInit() {
-    this.getServiceRecipe()
+    this.getServiceRecipe();
   }
 
   changeTab(event: MatTabChangeEvent): void {
@@ -106,12 +105,14 @@ export class OnboardComponent implements OnInit {
         }
         console.log(JSON.stringify(data));
         this.serviceRecipe = new MatTableDataSource<ServiceRecipe>(data.serviceRecipes);
-        this.serviceRecipe.sort = this.sort;
-        this.serviceRecipe.paginator = this.paginator;
-        this.serviceRecipe.paginator.firstPage();
-      },error => {
+        if (this.sort) { this.serviceRecipe.sort = this.sort; }
+        if (this.paginator) {
+          this.serviceRecipe.paginator = this.paginator;
+          this.paginator.firstPage();
+        }
+      }, error => {
         console.log(error);
-        this.popup.error("Unable to load service recipes, Error code:" + error.status);
+        this.popup.error('Unable to load service recipes, Error code:' + error.status);
         this.spinner.hide();
     });
   }
@@ -131,9 +132,9 @@ export class OnboardComponent implements OnInit {
         }
         this.networkRecipe = new MatTableDataSource<NetworkRecipe>(data.networkRecipes);
         console.log(JSON.stringify(data));
-      },error => {
+      }, error => {
         console.log(error);
-        this.popup.error("Unable to load network recipes, Error code:" + error.status);
+        this.popup.error('Unable to load network recipes, Error code:' + error.status);
         this.spinner.hide();
     });
   }
@@ -153,52 +154,54 @@ export class OnboardComponent implements OnInit {
         }
         this.vnfRecipe = new MatTableDataSource<VnfRecipe>(data.vnfRecipes);
         console.log(JSON.stringify(data));
-      },error => {
+      }, error => {
         console.log(error);
-        this.popup.error("Unable to load VNF recipes, Error code:" + error.status);
+        this.popup.error('Unable to load VNF recipes, Error code:' + error.status);
         this.spinner.hide();
     });
   }
 
   onSubmit() {
-    if(this.fileList.length > 0) {
+    if (this.fileList.length > 0) {
       this.handleUpload();
     } else {
-      this.popup.error("Please select atleast one file.");
+      this.popup.error('Please select atleast one file.');
     }
   }
 
-  beforeUpload = (evt: any): boolean => {
+  beforeUpload = (evt: Event): boolean => {
     this.fileList = [];
-    if(evt) {
-      let file = evt.currentTarget.files[0];
+    if (evt) {
+      const input = evt.currentTarget;
+      if (!(input instanceof HTMLInputElement) || !input.files) { return false; }
+      const file = input.files[0];
       if (!file) { return false; }
-      if(file.name.endsWith(".war")) {
+      if (file.name.endsWith('.war')) {
         this.fileList = this.fileList.concat(file);
       } else {
-        this.popup.error("Invalid file format.");
+        this.popup.error('Invalid file format.');
       }
     }
     return false;
-  };
+  }
 
   handleUpload(): void {
-    if (this.fileList.length == 0) {
+    if (this.fileList.length === 0) {
       return;
     }
-    this.spinner.show()
+    this.spinner.show();
     const formData = new FormData();
-    this.fileList.forEach((file: any) => {
+    this.fileList.forEach((file) => {
       formData.append('file', file, file.name);
     });
     this.data.onboardBPMNInfra(formData)
       .subscribe((data) => {
         this.spinner.hide();
         console.log(JSON.stringify(data));
-        if(data !== null) {
-          if(data.result == "true") {
+        if (data !== null) {
+          if (data.result === 'true') {
             this.popup.info(data.message || 'Workflow uploaded.');
-          } else if(data.errMsg) {
+          } else if (data.errMsg) {
             this.popup.error(data.errMsg);
           } else {
             this.popup.error(data.message || 'Unable to upload bpmn file.');
@@ -206,9 +209,9 @@ export class OnboardComponent implements OnInit {
         } else {
           this.popup.error('Unable to upload bpmn file: empty response.');
         }
-      },error => {
+      }, error => {
         console.log(error);
-        this.popup.error("Unable to upload bpmn file, Error code:" + error.status);
+        this.popup.error('Unable to upload bpmn file, Error code:' + error.status);
         this.spinner.hide();
     });
   }

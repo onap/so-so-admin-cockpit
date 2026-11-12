@@ -21,39 +21,61 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import { Injectable } from '@angular/core';
-declare var toastr: any
+export interface ToastrOptions {
+  closeButton: boolean;
+  debug: boolean;
+  newestOnTop: boolean;
+  progressBar: boolean;
+  positionClass: string;
+  preventDuplicates: boolean;
+  onclick: null;
+  showDuration: string;
+  hideDuration: string;
+  timeOut: string;
+  extendedTimeOut: string;
+  showEasing: string;
+  hideEasing: string;
+  showMethod: string;
+  hideMethod: string;
+}
+export interface ToastrRuntime {
+  options: ToastrOptions;
+  error(message: string, title: string): void;
+  info(message: string, title: string): void;
+}
+declare const toastr: ToastrRuntime;
 @Injectable({
   providedIn: 'root'
 })
 export class ToastrNotificationService {
 
-  constructor() { this.toastrSettings() }
+  constructor() { this.toastrSettings(); }
 
   error(message: string) {
-    toastr.error(message, "Error");
+    toastr.error(message, 'Error');
   }
 
   info(message: string) {
-    toastr.info(message, "Info");
+    toastr.info(message, 'Info');
   }
 
   toastrSettings() {
     toastr.options = {
-      "closeButton": false,
-      "debug": false,
-      "newestOnTop": false,
-      "progressBar": false,
-      "positionClass": "toast-bottom-full-width",
-      "preventDuplicates": true,
-      "onclick": null,
-      "showDuration": "300",
-      "hideDuration": "1000",
-      "timeOut": "5000",
-      "extendedTimeOut": "1000",
-      "showEasing": "swing",
-      "hideEasing": "linear",
-      "showMethod": "fadeIn",
-      "hideMethod": "fadeOut"
-    }
+      'closeButton': false,
+      'debug': false,
+      'newestOnTop': false,
+      'progressBar': false,
+      'positionClass': 'toast-bottom-full-width',
+      'preventDuplicates': true,
+      'onclick': null,
+      'showDuration': '300',
+      'hideDuration': '1000',
+      'timeOut': '5000',
+      'extendedTimeOut': '1000',
+      'showEasing': 'swing',
+      'hideEasing': 'linear',
+      'showMethod': 'fadeIn',
+      'hideMethod': 'fadeOut'
+    };
   }
 }

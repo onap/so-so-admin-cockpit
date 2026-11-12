@@ -17,7 +17,7 @@
                     id="recipe-modelName"
                     formControlName="modelName"
                     [attr.aria-invalid]="modelName.invalid && modelName.touched"
-                    aria-describedby="recipe-modelName-error"
+                    [attr.aria-describedby]="modelName.invalid && modelName.touched ? 'recipe-modelName-error' : null"
                     required>
                 <small id="recipe-modelName-error" class="field-error"
                     [style.visibility]="modelName.invalid && modelName.touched ? 'visible' : 'hidden'">Model name is required.</small>
@@ -45,7 +45,7 @@
                         id="recipe-modelVersionId"
                     formControlName="modelVersionId"
                     [attr.aria-invalid]="modelVersionId.invalid && modelVersionId.touched"
-                    aria-describedby="recipe-modelVersionId-error"
+                    [attr.aria-describedby]="modelVersionId.invalid && modelVersionId.touched ? 'recipe-modelVersionId-error' : null"
                         required>
                 <small id="recipe-modelVersionId-error" class="field-error"
                     [style.visibility]="modelVersionId.invalid && modelVersionId.touched ? 'visible' : 'hidden'">Model version ID is required.</small>
@@ -61,7 +61,7 @@
                     id="recipe-operation"
                     formControlName="operation"
                     [attr.aria-invalid]="operation.invalid && operation.touched"
-                    aria-describedby="recipe-operation-error"
+                    [attr.aria-describedby]="operation.invalid && operation.touched ? 'recipe-operation-error' : null"
                     required>
                 <small id="recipe-operation-error" class="field-error"
                     [style.visibility]="operation.invalid && operation.touched ? 'visible' : 'hidden'">Action is required.</small>
@@ -77,7 +77,7 @@
                     id="recipe-orchestrationFlow"
                     formControlName="orchestrationFlow"
                     [attr.aria-invalid]="orchestrationFlow.invalid && orchestrationFlow.touched"
-                    aria-describedby="recipe-orchestrationFlow-error"
+                    [attr.aria-describedby]="orchestrationFlow.invalid && orchestrationFlow.touched ? 'recipe-orchestrationFlow-error' : null"
                     required>
                 <small id="recipe-orchestrationFlow-error" class="field-error"
                     [style.visibility]="orchestrationFlow.invalid && orchestrationFlow.touched ? 'visible' : 'hidden'">Orchestration URI is required.</small>
@@ -94,7 +94,7 @@
                     id="recipe-recipeTimeout"
                     formControlName="recipeTimeout"
                     [attr.aria-invalid]="recipeTimeout.invalid && recipeTimeout.touched"
-                    aria-describedby="recipe-timeout-help recipe-timeout-error">
+                    [attr.aria-describedby]="recipeTimeout.invalid && recipeTimeout.touched ? 'recipe-timeout-help recipe-timeout-error' : 'recipe-timeout-help'">
                 <small id="recipe-timeout-help">The server currently stores a timeout of 180 seconds.</small>
             </div>
             <div aria-live="polite" class="validation-feedback">
@@ -104,7 +104,7 @@
             <p *ngIf="saveError" role="alert">{{saveError}}</p>
             <button type="button" style="margin-right: 10px;"
                 class="btn btn-primary"
-                (click)="closeDialog($event)">Cancel
+                (click)="closeDialog()">Cancel
             </button>
             <button type="submit"
                     [disabled]="isSaving"

@@ -23,9 +23,17 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { BpmnViewerService, BpmnViewerAdapter } from './bpmn-viewer.service';
 
 // Synthetic diagram shared in shape with the real-renderer browser acceptance cases.
-const xml = `<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_1" targetNamespace="http://onap.org/tests">
+const xml = `<bpmn:definitions
+xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+id="Definitions_1" targetNamespace="http://onap.org/tests">
 <bpmn:process id="Process_1" isExecutable="true"><bpmn:callActivity id="Task_1" name="Deploy" calledElement="Child"/></bpmn:process>
-<bpmndi:BPMNDiagram id="Diagram_1"><bpmndi:BPMNPlane id="Plane_1" bpmnElement="Process_1"><bpmndi:BPMNShape id="Task_1_di" bpmnElement="Task_1"><dc:Bounds x="100" y="100" width="100" height="80"/></bpmndi:BPMNShape></bpmndi:BPMNPlane></bpmndi:BPMNDiagram>
+<bpmndi:BPMNDiagram id="Diagram_1">
+<bpmndi:BPMNPlane id="Plane_1" bpmnElement="Process_1">
+<bpmndi:BPMNShape id="Task_1_di" bpmnElement="Task_1">
+<dc:Bounds x="100" y="100" width="100" height="80"/></bpmndi:BPMNShape>
+</bpmndi:BPMNPlane></bpmndi:BPMNDiagram>
 </bpmn:definitions>`;
 
 describe('BPMN viewer adapter', () => {
@@ -33,7 +41,7 @@ describe('BPMN viewer adapter', () => {
   beforeEach(() => { hosts = []; adapters = []; });
   afterEach(() => {
     adapters.forEach(adapter => adapter.destroy());
-    hosts.forEach(host => host.parentNode.removeChild(host));
+    hosts.forEach(host => host.remove());
   });
   function create() {
     const host = document.createElement('div');

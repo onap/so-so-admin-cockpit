@@ -19,6 +19,7 @@ SPDX-License-Identifier: Apache-2.0
 
 */
 
+import { ToastrNotificationService } from '../toastr-notification-service.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -59,11 +60,12 @@ export const componentImports = [
   NgxSpinnerModule
 ];
 export function notificationStub() {
-  return jasmine.createSpyObj('notifications', ['error', 'info']);
+  return jasmine.createSpyObj<Pick<ToastrNotificationService, 'error' | 'info'>>('notifications', ['error', 'info']);
 }
 export function spinnerStub() {
   const spinner = new NgxSpinnerService();
-  spyOn(spinner, 'show').and.callThrough();
-  spyOn(spinner, 'hide').and.callThrough();
-  return spinner;
+  return Object.assign(spinner, {
+    show: spyOn(spinner, 'show').and.callThrough(),
+    hide: spyOn(spinner, 'hide').and.callThrough()
+  });
 }

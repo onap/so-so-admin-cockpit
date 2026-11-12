@@ -22,17 +22,12 @@ SPDX-License-Identifier: Apache-2.0
 
 import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { DataService } from '../data.service';
-import { ActivatedRoute, Router } from "@angular/router";
+import { Router } from '@angular/router';
 import { BpmnInfraRequest } from '../model/bpmnInfraRequest.model';
-import { ProcessInstanceId } from '../model/processInstanceId.model';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
-import { MatSelectModule } from '@angular/material/select';
-import { FormsModule, FormControl } from '@angular/forms';
 import { SearchData } from '../model/searchData.model';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { SearchRequest } from '../model/SearchRequest.model';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { MatFormFieldModule, MatInputModule, MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
+import { MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
 import { Constants } from './home.constant';
 import { Subject, EMPTY, defer } from 'rxjs';
 import { map, switchMap, catchError, finalize, takeUntil } from 'rxjs/operators';
@@ -69,13 +64,12 @@ export class HomeComponent implements OnDestroy {
   pageSizeOptions = Constants.DEFAULT_PAGE_SIZE_OPTIONS;
 
   searchData: SearchData;
-  startingDate: Date;
-  processData: MatTableDataSource<BpmnInfraRequest>;
+  processData = new MatTableDataSource<BpmnInfraRequest>();
 
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatPaginator) paginator?: MatPaginator;
+  @ViewChild(MatSort) sort?: MatSort;
 
-  constructor(private route: ActivatedRoute, private data: DataService,
+  constructor(private data: DataService,
     private router: Router, private popup: ToastrNotificationService,
     private spinner: NgxSpinnerService) {
     this.searchData = new SearchData();
@@ -141,21 +135,23 @@ export class HomeComponent implements OnDestroy {
 
   private showResults(processData: BpmnInfraRequest[]) {
     this.processData = new MatTableDataSource<BpmnInfraRequest>(processData);
-    this.processData.sort = this.sort;
-    this.processData.paginator = this.paginator;
-    this.processData.paginator.firstPage();
+    if (this.sort) { this.processData.sort = this.sort; }
+    if (this.paginator) {
+      this.processData.paginator = this.paginator;
+      this.paginator.firstPage();
+    }
     this.popup.info('Number of records found: ' + processData.length);
           // Calculate Statistics for Service Statistics tab
-          this.completeVal = processData.filter(i => i.requestStatus === "COMPLETE").length;
-          this.inProgressVal = processData.filter(i => i.requestStatus === "IN_PROGRESS").length;
-          this.failedVal = processData.filter(i => i.requestStatus === "FAILED").length;
-          this.pendingVal = processData.filter(i => i.requestStatus === "PENDING").length;
-          this.unlockedVal = processData.filter(i => i.requestStatus === "UNLOCKED").length;
+          this.completeVal = processData.filter(i => i.requestStatus === 'COMPLETE').length;
+          this.inProgressVal = processData.filter(i => i.requestStatus === 'IN_PROGRESS').length;
+          this.failedVal = processData.filter(i => i.requestStatus === 'FAILED').length;
+          this.pendingVal = processData.filter(i => i.requestStatus === 'PENDING').length;
+          this.unlockedVal = processData.filter(i => i.requestStatus === 'UNLOCKED').length;
           this.totalVal = processData.length;
 
           // Calculate percentages to 2 decimal places and compare to 0 to avoid NaN error
           this.percentageComplete = this.percentageFailed = this.percentageInProg = this.percentagePending = this.percentageUnlocked = 0;
-          if (this.totalVal != 0) {
+          if (this.totalVal !== 0) {
             this.percentageComplete = Math.round(((this.completeVal / this.totalVal) * 100) * 100) / 100;
             this.percentageFailed = Math.round(((this.failedVal / this.totalVal) * 100) * 100) / 100;
             this.percentageInProg = Math.round(((this.inProgressVal / this.totalVal) * 100) * 100) / 100;
