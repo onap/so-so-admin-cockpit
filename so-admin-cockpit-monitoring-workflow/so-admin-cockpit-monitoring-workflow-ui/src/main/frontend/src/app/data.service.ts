@@ -66,21 +66,20 @@ export class DataService {
   }
 
   // HTTP GET to return Activity instancs using ProcessInstanceID
-  getActivityInstance(processInstanceId: string): Promise<ActivityInstance[]> {
+  getActivityInstance(processInstanceId: string): Observable<ActivityInstance[]> {
     var url = environment.soMonitoringBackendURL + '/activity-instance/' + processInstanceId;
     return this.http.get<ActivityInstance[]>(url)
       .pipe(
         catchError(this.httpErrorHandlerService.handleError("GET", url))
-      ).toPromise();
+      );
   }
 
   // HTTP GET to return Activity Instance using ProcessInstanceID
-  async getProcessInstance(processInstanceId: string): Promise<ProcessInstanceDetail> {
+  getProcessInstance(processInstanceId: string): Observable<ProcessInstanceDetail> {
     var url = environment.soMonitoringBackendURL + '/process-instance/' + processInstanceId;
-    return await (this.http.get<ProcessInstanceDetail>(url)
+    return this.http.get<ProcessInstanceDetail>(url)
       .pipe(
-        catchError(this.httpErrorHandlerService.handleError("GET", url))))
-      .toPromise();
+        catchError(this.httpErrorHandlerService.handleError("GET", url)));
   }
 
   // HTTP GET to return Process Definition using processDefinitionId

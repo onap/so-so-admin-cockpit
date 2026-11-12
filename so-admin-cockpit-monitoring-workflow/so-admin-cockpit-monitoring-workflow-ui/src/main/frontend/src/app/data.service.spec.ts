@@ -68,12 +68,11 @@ describe('DataService HTTP contract', () => {
     ['getActivityInstance', 'activity-instance', [activity]],
     ['getProcessInstance', 'process-instance', process]
   ].forEach(([method, path, value]: any[]) => {
-    it('resolves ' + path + ' from its GET response', async () => {
-      const promise = service[method]('process-1');
+    it('returns ' + path + ' from its GET response', () => {
+      service[method]('process-1').subscribe(data => expect(data).toEqual(value));
       const req = http.expectOne(base + '/' + path + '/process-1');
       expect(req.request.method).toBe('GET');
       req.flush(value);
-      expect(await promise).toEqual(value);
     });
   });
   [
@@ -150,18 +149,22 @@ describe('DataService HTTP contract', () => {
       }
     )
   );
-  it('rejects a failed Promise request', async () => {
-    const promise = service.getProcessInstance('id').then(
-      () => fail('expected rejection'),
-      (e) => {
-        expect(e.status).toBe(404);
-        expect(e.error).toEqual({ message: 'missing' });
+  it('retains process-request errors through the Observable', () => {
+    service.getProcessInstance('id').subscribe(
+      () => fail('expected error'),
+      error => {
+        expect(error.status).toBe(404);
+        expect(error.error).toEqual({ message: 'missing' });
       }
     );
-    http
-      .expectOne(base + '/process-instance/id')
+    http.expectOne(base + '/process-instance/id')
       .flush({ message: 'missing' }, { status: 404, statusText: 'Not Found' });
-    await promise;
+  });
+  it('cancels an activity HTTP request when its subscriber leaves', () => {
+    const subscription = service.getActivityInstance('id').subscribe();
+    const pending = http.expectOne(base + '/activity-instance/id');
+    subscription.unsubscribe();
+    expect(pending.cancelled).toBe(true);
   });
   it('retains network error details without notifying', () => {
     service.getVariableInstance('id').subscribe(

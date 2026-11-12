@@ -20,6 +20,11 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 export class BpmnViewerStub {
+  addDrilldown = jasmine.createSpy('drilldown').and.callFake((id, processId, navigate) => {
+    this.overlay = document.createElement('div');
+    this.overlay.onclick = () => navigate(processId);
+    this.overlays.add(id, { html: this.overlay });
+  });
   importError: Error = null;
   overlay: HTMLElement;
   canvas = {

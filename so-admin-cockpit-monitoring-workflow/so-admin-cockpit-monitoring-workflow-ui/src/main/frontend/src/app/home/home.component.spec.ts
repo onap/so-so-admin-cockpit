@@ -30,7 +30,7 @@ import { DataService } from '../data.service';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import {
   componentImports,
@@ -172,6 +172,92 @@ describe('Search workflow', () => {
     expect(router.navigate).not.toHaveBeenCalled();
     expect(popup.error).toHaveBeenCalled();
     expect(spinner.hide).toHaveBeenCalled();
+  });
+  it('keeps the latest search rows when responses arrive in reverse order', () => {
+    const first = new Subject<any[]>(), second = new Subject<any[]>();
+    api.getBpmnInfraRequest.and.returnValues(first, second);
+    component.makeCall();
+    component.makeCall();
+    expect(spinner.hide).not.toHaveBeenCalled();
+    second.next([Object.assign({}, request, { serviceInstanceName: 'Latest' })]);
+    second.complete();
+    first.next([request]);
+    first.complete();
+    expect(component.processData.data[0].serviceInstanceName).toBe('Latest');
+    expect(popup.info.calls.count()).toBe(1);
+  });
+  it('retains loading ownership across overlapping search and lookup', () => {
+    const rows = new Subject<any[]>(), lookup = new Subject<any>();
+    api.getBpmnInfraRequest.and.returnValue(rows);
+    api.getProcessInstanceId.and.returnValue(lookup);
+    component.makeCall();
+    component.getProcessInstanceId('request-1');
+    spinner.hide.calls.reset();
+    rows.next([request]);
+    rows.complete();
+    expect(spinner.hide).not.toHaveBeenCalled();
+    lookup.error({ status: 404 });
+    expect(spinner.hide).toHaveBeenCalledTimes(1);
+  });
+  it('cancels pending work on destruction without late results or navigation', () => {
+    const rows = new Subject<any[]>(), lookup = new Subject<any>();
+    api.getBpmnInfraRequest.and.returnValue(rows);
+    api.getProcessInstanceId.and.returnValue(lookup);
+    component.makeCall();
+    component.getProcessInstanceId('request-1');
+    fixture.destroy();
+    rows.next([request]);
+    lookup.next(new HttpResponse({ body: { processInstanceId: 'late' } }));
+    expect(component.processData).toBeUndefined();
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(spinner.hide).toHaveBeenCalled();
+  });
+  it('permits another search after the latest request failed', () => {
+    const stale = new Subject<any[]>();
+    api.getBpmnInfraRequest.and.returnValues(stale, throwError({ status: 500 }), of([]));
+    component.makeCall();
+    component.makeCall();
+    stale.next([request]);
+    expect(component.processData).toBeUndefined();
+    component.makeCall();
+    expect(component.processData.data).toEqual([]);
+    expect(spinner.hide).toHaveBeenCalled();
+  });
+  it('does not navigate for an older lookup after a newer search starts', () => {
+    const lookup = new Subject<any>();
+    api.getProcessInstanceId.and.returnValue(lookup);
+    api.getBpmnInfraRequest.and.returnValue(of([]));
+    component.getProcessInstanceId('request-1');
+    component.makeCall();
+    lookup.next(new HttpResponse({ body: { processInstanceId: 'obsolete' } }));
+    lookup.complete();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+  it('does not report a stale search failure over a pending lookup', () => {
+    const rows = new Subject<any[]>(), lookup = new Subject<any>();
+    api.getBpmnInfraRequest.and.returnValue(rows);
+    api.getProcessInstanceId.and.returnValue(lookup);
+    component.makeCall(); component.getProcessInstanceId('request-1');
+    rows.error({ status: 500 });
+    expect(popup.error).not.toHaveBeenCalled();
+    lookup.complete();
+  });
+  it('does not report a stale lookup failure over a newer search', () => {
+    const lookup = new Subject<any>();
+    api.getProcessInstanceId.and.returnValue(lookup);
+    api.getBpmnInfraRequest.and.returnValue(of([]));
+    component.getProcessInstanceId('request-1'); component.makeCall();
+    lookup.error({ status: 404 });
+    expect(popup.error).not.toHaveBeenCalled();
+  });
+  [null, { processInstanceId: '' }].forEach(body => {
+    it('rejects a lookup without a process ID: ' + JSON.stringify(body), () => {
+      api.getProcessInstanceId.and.returnValue(of(new HttpResponse({ body })));
+      component.getProcessInstanceId('request-1');
+      expect(router.navigate).not.toHaveBeenCalled();
+      expect(popup.error).toHaveBeenCalled();
+      expect(spinner.hide).toHaveBeenCalled();
+    });
   });
   it('sorts and pages the rendered result set', fakeAsync(() => {
     search(

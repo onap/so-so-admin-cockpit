@@ -20,8 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 @authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com
 */
 
-import { Component, OnInit } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-sidebar',
@@ -29,11 +28,4 @@ import { Router, NavigationEnd } from '@angular/router';
   styleUrls: ['./sidebar.component.scss']
 })
 
-export class SidebarComponent {
-
-  currentUrl: string;
-
-  constructor(private router: Router) {
-    router.events.subscribe((_: NavigationEnd) => this.currentUrl = _.url);
-  }
-}
+export class SidebarComponent {}

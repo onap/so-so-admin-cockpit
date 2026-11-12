@@ -20,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 @authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com, andrei.barcovschi@ericsson.com
 */
 
-import { Component, OnInit, ViewChild, ElementRef, Input, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, ViewChild, ViewEncapsulation } from '@angular/core';
 import { DataService } from '../data.service';
 import { ActivatedRoute, Router } from "@angular/router";
 import { BpmnInfraRequest } from '../model/bpmnInfraRequest.model';
@@ -34,6 +34,8 @@ import { SearchRequest } from '../model/SearchRequest.model';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MatFormFieldModule, MatInputModule, MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
 import { Constants } from './home.constant';
+import { Subject, EMPTY, defer } from 'rxjs';
+import { map, switchMap, catchError, finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-home',
@@ -42,7 +44,11 @@ import { Constants } from './home.constant';
   encapsulation: ViewEncapsulation.None
 })
 
-export class HomeComponent {
+export class HomeComponent implements OnDestroy {
+  private destroy$ = new Subject<void>();
+  private searches$ = new Subject<number>();
+  private lookups$ = new Subject<{ requestId: string; load: number }>();
+  private loadingOwner = 0;
 
   totalVal = 0;
   completeVal = 0;
@@ -74,24 +80,72 @@ export class HomeComponent {
     private router: Router, private popup: ToastrNotificationService,
     private spinner: NgxSpinnerService) {
     this.searchData = new SearchData();
+    this.searches$.pipe(
+      switchMap(load => defer(() => this.searchData.getSearchRequest()).pipe(
+        catchError(error => { this.popup.error(error); return EMPTY; }),
+        switchMap(result => this.data.getBpmnInfraRequest(
+          result.getFilters(), result.getStartTimeInMilliseconds(), result.getEndTimeInMilliseconds()
+        ).pipe(catchError(error => {
+          if (load === this.loadingOwner) {
+            this.popup.error('Unable to perform search Error code:' + error.status);
+          }
+          return EMPTY;
+        }))),
+        map(rows => ({ rows, load })),
+        finalize(() => this.finishLoading(load))
+      )),
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      if (result.load === this.loadingOwner) { this.showResults(result.rows); }
+    });
+    this.lookups$.pipe(
+      switchMap(operation => this.data.getProcessInstanceId(operation.requestId).pipe(
+        map(response => ({ response, operation })),
+        catchError(() => {
+          if (operation.load === this.loadingOwner) { this.lookupFailed(operation.requestId); }
+          return EMPTY;
+        }),
+        finalize(() => this.finishLoading(operation.load))
+      )),
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      if (result.operation.load !== this.loadingOwner) { return; }
+      const response = result.response;
+      if (response.status === 200 && response.body && response.body.processInstanceId) {
+        this.router.navigate(['/details/' + response.body.processInstanceId]);
+      } else {
+        this.lookupFailed(result.operation.requestId);
+      }
+    });
   }
 
   makeCall() {
+    this.searches$.next(this.beginLoading());
+  }
+
+  getProcessInstanceId(requestId: string) {
+    this.lookups$.next({ requestId, load: this.beginLoading() });
+  }
+
+  private beginLoading(): number {
     this.spinner.show();
+    return ++this.loadingOwner;
+  }
 
-    var search = this.searchData.getSearchRequest().subscribe((result: SearchRequest) => {
+  private finishLoading(load: number) {
+    if (load === this.loadingOwner) { this.spinner.hide(); }
+  }
 
-      this.data.getBpmnInfraRequest(result.getFilters(), result.getStartTimeInMilliseconds(), result.getEndTimeInMilliseconds())
-        .subscribe((data: BpmnInfraRequest[]) => {
-          this.spinner.hide();
-          var processData: BpmnInfraRequest[] = data;
-          this.processData = new MatTableDataSource<BpmnInfraRequest>(processData);
-          this.processData.sort = this.sort;
-          this.processData.paginator = this.paginator;
-          this.processData.paginator.firstPage();
+  private lookupFailed(requestId: string) {
+    this.popup.error('No process instance id found: ' + requestId);
+  }
 
-          this.popup.info("Number of records found: " + data.length)
-
+  private showResults(processData: BpmnInfraRequest[]) {
+    this.processData = new MatTableDataSource<BpmnInfraRequest>(processData);
+    this.processData.sort = this.sort;
+    this.processData.paginator = this.paginator;
+    this.processData.paginator.firstPage();
+    this.popup.info('Number of records found: ' + processData.length);
           // Calculate Statistics for Service Statistics tab
           this.completeVal = processData.filter(i => i.requestStatus === "COMPLETE").length;
           this.inProgressVal = processData.filter(i => i.requestStatus === "IN_PROGRESS").length;
@@ -109,36 +163,12 @@ export class HomeComponent {
             this.percentagePending = Math.round(((this.pendingVal / this.totalVal) * 100) * 100) / 100;
             this.percentageUnlocked = Math.round(((this.unlockedVal / this.totalVal) * 100) * 100) / 100;
           }
-          console.log("COMPLETE: " + this.completeVal);
-          console.log("FAILED: " + this.failedVal);
-        }, error => {
-          console.log(error);
-          this.popup.error("Unable to perform search Error code:" + error.status);
-          this.spinner.hide();
-        });
-    }, error => {
-      console.log("Data validation error " + error);
-      this.popup.error(error);
-      this.spinner.hide();
-    });
   }
 
-  getProcessInstanceId(requestId: string) {
-    this.spinner.show();
-
-    var response = this.data.getProcessInstanceId(requestId).subscribe((data) => {
-      if (data.status == 200) {
-        this.spinner.hide();
-        var processInstanceId = (data.body as ProcessInstanceId).processInstanceId;
-        this.router.navigate(['/details/' + processInstanceId]);
-      } else {
-        this.popup.error('No process instance id found: ' + requestId);
-        this.spinner.hide();
-        console.log('No process instance id found: ' + requestId);
-      }
-    }, error => {
-      this.popup.error('No process instance id found: ' + requestId);
-      this.spinner.hide();
-    });
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.searches$.complete();
+    this.lookups$.complete();
   }
 }

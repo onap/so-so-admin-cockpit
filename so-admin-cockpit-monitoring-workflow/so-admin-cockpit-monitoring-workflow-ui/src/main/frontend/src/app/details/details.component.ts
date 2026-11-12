@@ -20,23 +20,18 @@ SPDX-License-Identifier: Apache-2.0
 @authors: ronan.kenny@est.tech, waqas.ikram@est.tech
 */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, AfterViewInit, OnDestroy, ElementRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Subject, Observable, EMPTY, of, merge, forkJoin, asapScheduler } from 'rxjs';
+import { map, distinctUntilChanged, observeOn, tap, switchMap, catchError, finalize, takeUntil } from 'rxjs/operators';
 import { DataService } from '../data.service';
-import { ActivatedRoute, Router } from "@angular/router";
-import { BpmnInfraRequest } from '../model/bpmnInfraRequest.model';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ActivityInstance } from '../model/activityInstance.model';
 import { ProcessInstanceDetail } from '../model/processInstance.model';
 import { ProcessDefinitionDetail } from '../model/processDefinition.model';
-import { CommonModule } from '@angular/common';
-// Angular 6's build optimizer strips inheritance from the unbundled viewer.
-import Viewer from 'bpmn-js/dist/bpmn-navigated-viewer.production.min.js';
-import { ViewEncapsulation } from '@angular/core';
-import { MatTabsModule } from '@angular/material/tabs';
-import { VariableInstance, VariableInstanceDisplay } from '../model/variableInstance.model';
+import { VariableInstanceDisplay } from '../model/variableInstance.model';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { ElementRef, ViewChild } from '@angular/core';
+import { BpmnViewerService, BpmnViewerAdapter } from './bpmn-viewer.service';
 
 @Component({
   selector: 'app-details',
@@ -44,210 +39,141 @@ import { ElementRef, ViewChild } from '@angular/core';
   styleUrls: ['./details.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-
-export class DetailsComponent implements OnInit, OnDestroy {
-
-  private routeSubscription: Subscription;
+export class DetailsComponent implements AfterViewInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private activeLoad = 0;
-
-  @ViewChild("canvas") elementReference: ElementRef;
-
-  bpmnViewer: any;
-
-  processInstanceID: string;
-
-  processDefinitionID: string;
-
-  processDefinitionName: string;
-
+  @ViewChild('canvas') elementReference: ElementRef;
+  bpmnViewer: BpmnViewerAdapter | null = null;
+  processInstanceID = '';
+  processDefinitionID = '';
+  processDefinitionName = '';
   activityInstance: ActivityInstance[] = [];
-
-  processInstance: ProcessInstanceDetail;
-
-  processDefinition: ProcessDefinitionDetail;
-
-  variableInstance: VariableInstanceDisplay[];
-
+  processInstance: ProcessInstanceDetail | null = null;
+  processDefinition: ProcessDefinitionDetail | null = null;
+  variableInstance: VariableInstanceDisplay[] = [];
   displayedColumns = ['activityId', 'activityName', 'activityType', 'startTime', 'endTime', 'durationInMillis'];
-
   displayedColumnsVariable = ['name', 'type', 'value'];
 
   constructor(private route: ActivatedRoute, private data: DataService, private popup: ToastrNotificationService,
-    private router: Router, private spinner: NgxSpinnerService) { }
+    private router: Router, private spinner: NgxSpinnerService, private viewers: BpmnViewerService) {}
 
-  async getActivityInstance(procInstId: string) {
-    const load = this.activeLoad;
-    await this.data.getActivityInstance(procInstId).then(
-      (data: ActivityInstance[]) => {
-        if (load !== this.activeLoad) { return; }
-        this.activityInstance = data;
-        console.log(data);
-      }, error => {
-        if (load !== this.activeLoad) { return; }
-        this.spinner.hide();
-        console.log(error);
-        this.popup.error("Unable to get activity instance details for id: " + procInstId + " Error code:" + error.status);
-      });
+  ngAfterViewInit() {
+    this.route.params.pipe(
+      map(params => params.id as string),
+      distinctUntilChanged(),
+      // A synchronous route emission must not change checked template bindings in AfterViewInit.
+      observeOn(asapScheduler),
+      tap(id => {
+        ++this.activeLoad;
+        this.disposeViewer();
+        this.processInstanceID = id;
+        this.processDefinitionID = this.processDefinitionName = '';
+        this.processInstance = this.processDefinition = null;
+        this.activityInstance = [];
+        this.variableInstance = [];
+        this.spinner.show();
+      }),
+      switchMap(id => {
+        const load = this.activeLoad;
+        this.bpmnViewer = this.viewers.create(this.elementReference.nativeElement);
+        return merge(this.loadDiagram(id, load), this.loadVariables(id));
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe();
   }
 
-  async getProcessDefinition(procDefId: string) {
-    const load = this.activeLoad;
-    await this.data.getProcessDefinition(procDefId).subscribe(
-      async (data: ProcessDefinitionDetail) => {
-        if (load !== this.activeLoad) { return; }
-        this.processDefinition = data;
-        console.log(data);
-        await this.displayCamundaflow(this.processDefinition.processDefinitionXml, this.activityInstance,
-          this.router, this.spinner, this.popup);
-      }, error => {
-        if (load !== this.activeLoad) { return; }
-        this.spinner.hide();
-        console.log(error);
-        this.popup.error("Unable to get process definition for id: " + procDefId + " Error code:" + error.status);
-      });
+  private loadDiagram(id: string, load: number): Observable<void> {
+    let failure = 'Unable to get process instance for id: ' + id;
+    return this.data.getProcessInstance(id).pipe(
+      tap(instance => {
+        this.processInstance = instance;
+        this.processDefinitionID = instance.processDefinitionId;
+        this.processDefinitionName = instance.processDefinitionName;
+      }),
+      switchMap(instance => forkJoin<ActivityInstance[], ProcessDefinitionDetail>([
+        this.data.getActivityInstance(id).pipe(catchError(error => {
+          this.popup.error('Unable to get activity instance details for id: ' + id + ' Error code:' + error.status);
+          return of([] as ActivityInstance[]);
+        })),
+        this.data.getProcessDefinition(instance.processDefinitionId).pipe(catchError(error => {
+          failure = 'Unable to get process definition for id: ' + instance.processDefinitionId;
+          throw error;
+        }))
+      ])),
+      switchMap(result => {
+        this.activityInstance = result[0];
+        this.processDefinition = result[1];
+        failure = 'Unable to load BPMN flow ';
+        return this.importDiagram(result[1].processDefinitionXml, result[0], load);
+      }),
+      catchError(error => {
+        this.popup.error(failure + (failure === 'Unable to load BPMN flow ' ? '' : ' Error code:' + error.status));
+        this.disposeViewer();
+        return EMPTY;
+      }),
+      finalize(() => { if (load === this.activeLoad) { this.spinner.hide(); } })
+    );
   }
 
-  async getProcInstance(procInstId: string) {
-    const load = this.activeLoad;
-    await this.data.getProcessInstance(procInstId).then(
-      async (data: ProcessInstanceDetail) => {
-        if (load !== this.activeLoad) { return; }
-        this.processInstance = data;
-        this.processDefinitionID = this.processInstance.processDefinitionId;
-        this.processDefinitionName = this.processInstance.processDefinitionName;
-        console.log("Process definition id: " + this.processDefinitionID);
-        await this.getActivityInstance(procInstId);
-        if (load !== this.activeLoad) { return; }
-        await this.getProcessDefinition(this.processDefinitionID);
-      }, error => {
-        if (load !== this.activeLoad) { return; }
-        this.spinner.hide();
-        console.log(error);
-        this.popup.error("Unable to get process instance for id: " + procInstId + " Error code:" + error.status);
-      });
-  }
-
-  displayCamundaflow(bpmnXml, activities: ActivityInstance[], router: Router,
-    spinner: NgxSpinnerService, popup: ToastrNotificationService) {
-    spinner.show();
-    const load = this.activeLoad;
-
-    this.bpmnViewer.importXML(bpmnXml, (error) => {
-      if (load !== this.activeLoad) { return; }
-      if (error) {
-        console.error('Unable to load BPMN flow ', error);
-        popup.error('Unable to load BPMN flow ');
-        spinner.hide();
-      } else {
-        spinner.hide();
-        let canvas = this.bpmnViewer.get('canvas');
-        var eventBus = this.bpmnViewer.get('eventBus');
-        var elementRegistry = this.bpmnViewer.get('elementRegistry');
-        var overlays = this.bpmnViewer.get('overlays');
-
-        activities.filter(a => elementRegistry.get(a.activityId)).forEach(a => {
-          if (a.calledProcessInstanceId) {
-            var element = elementRegistry.get(a.activityId);
-            let newNode = document.createElement('div');
-            newNode.className = 'highlight-overlay';
-            newNode.id = element.id;
-            newNode.style.width = element.width + "px";
-            newNode.style.height = element.height + "px";
-            newNode.style.cursor = "pointer";
-
-            overlays.add(a.activityId, {
-              position: {
-                top: -5,
-                left: -5
-              },
-              html: newNode
-            });
-
-            newNode.addEventListener('click', function(e) {
-              console.log("clicked on: " + e.srcElement.id)
-              activities.forEach(a => {
-                if (a.activityId == e.srcElement.id && a.calledProcessInstanceId !== null) {
-                  console.log("will drill down to : " + a.calledProcessInstanceId);
-                  router.navigate(['/details/' + a.calledProcessInstanceId]);
-                }
-              });
+  private importDiagram(xml: string, activities: ActivityInstance[], load: number): Observable<void> {
+    const viewer = this.bpmnViewer;
+    return new Observable<void>(observer => {
+      viewer.importXML(xml, error => {
+        if (load !== this.activeLoad || observer.closed) { return; }
+        if (error) { observer.error(error); return; }
+        const registry = viewer.get('elementRegistry');
+        activities.forEach(activity => {
+          if (!registry.get(activity.activityId)) { return; }
+          if (activity.calledProcessInstanceId && activity.calledProcessInstanceId.trim()) {
+            viewer.addDrilldown(activity.activityId, activity.calledProcessInstanceId, id => {
+              if (load === this.activeLoad) { this.router.navigate(['/details/' + id]); }
             });
           }
+          viewer.get('canvas').addMarker(activity.activityId, 'highlight');
         });
-        // zoom to fit full viewport
-        canvas.zoom('fit-viewport', 'auto');
-        activities.forEach(a => {
-          if (elementRegistry.get(a.activityId)) {
-            canvas.addMarker(a.activityId, 'highlight');
-          }
-        });
-      }
+        viewer.get('canvas').zoom('fit-viewport', 'auto');
+        observer.next();
+        observer.complete();
+      });
     });
   }
 
-  zoomIn() {
-    this.bpmnViewer.get('zoomScroll').zoom(1, {
-      x: this.elementReference.nativeElement.offsetWidth / 2,
-      y: this.elementReference.nativeElement.offsetHeight / 2
-    });
+  private loadVariables(id: string): Observable<VariableInstanceDisplay[]> {
+    return this.data.getVariableInstance(id).pipe(
+      map(rows => rows.map(variable => {
+        const rawValue = variable.value;
+        const value = typeof rawValue === 'object'
+          ? (rawValue === null ? null : JSON.stringify(rawValue, null, 2)) : rawValue;
+        return { name: variable.name, type: variable.type, value };
+      })),
+      tap(rows => this.variableInstance = rows),
+      catchError(error => {
+        this.popup.error('Unable to get Variable instances for id: ' + id + ' Error code:' + error.status);
+        return EMPTY;
+      })
+    );
   }
 
-  zoomOut() {
-    this.bpmnViewer.get('zoomScroll').zoom(-1, {
-      x: this.elementReference.nativeElement.offsetWidth / 2,
-      y: this.elementReference.nativeElement.offsetHeight / 2
-    });
+  zoomIn() { this.zoom(1); }
+  zoomOut() { this.zoom(-1); }
+  private zoom(step: number) {
+    if (!this.bpmnViewer) { return; }
+    const element: HTMLElement = this.elementReference.nativeElement;
+    this.bpmnViewer.get('zoomScroll').zoom(step, { x: element.offsetWidth / 2, y: element.offsetHeight / 2 });
   }
   resetZoom() {
-    let canvas = this.bpmnViewer.get('canvas');
+    if (!this.bpmnViewer) { return; }
+    const canvas = this.bpmnViewer.get('canvas');
     canvas.resized();
     canvas.zoom('fit-viewport', 'auto');
-
   }
-
-  getVarInst(procInstId: string) {
-    const load = this.activeLoad;
-    this.data.getVariableInstance(procInstId).subscribe(
-      (data: VariableInstance[]) => {
-        if (load !== this.activeLoad) { return; }
-        this.variableInstance = data.map(variable => {
-          const rawValue = variable.value;
-          const value = typeof rawValue === 'object'
-            ? (rawValue === null ? null : JSON.stringify(rawValue, null, 2)) : rawValue;
-          return { name: variable.name, type: variable.type, value };
-        });
-        console.log(data);
-      }, error => {
-        if (load !== this.activeLoad) { return; }
-        this.spinner.hide();
-        console.log(error);
-        this.popup.error("Unable to get Variable instances for id: " + procInstId + " Error code:" + error.status);
-      });
+  private disposeViewer() {
+    if (this.bpmnViewer) { this.bpmnViewer.destroy(); this.bpmnViewer = null; }
   }
-
   ngOnDestroy() {
-    this.activeLoad++;
-    this.spinner.hide();
-    if (this.routeSubscription) { this.routeSubscription.unsubscribe(); }
-    if (this.bpmnViewer) { this.bpmnViewer.destroy(); }
+    this.destroy$.next();
+    this.destroy$.complete();
+    ++this.activeLoad;
+    this.disposeViewer();
   }
-
-  createViewer() {
-    return new Viewer({ container: '.canvas' });
-  }
-
-  async ngOnInit() {
-    this.bpmnViewer = this.createViewer();
-    this.routeSubscription = this.route.params.subscribe(
-      async params => {
-        const load = ++this.activeLoad;
-        this.activityInstance = [];
-        this.processInstanceID = params.id as string;
-        console.log("Will GET BpmnInfraRequest instance using id: " + this.processInstanceID);
-        await this.getProcInstance(this.processInstanceID);
-        if (load !== this.activeLoad) { return; }
-        this.getVarInst(this.processInstanceID);
-      });
-  }
-
 }
