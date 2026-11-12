@@ -2,7 +2,8 @@ import { Component, OnInit, Inject } from '@angular/core';
 import { DataService } from '../data.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { finalize } from 'rxjs/operators';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { RecipeDialogData, RecipeDialogResult, RecipeTab } from '../model/recipe-dialog.model';
@@ -28,7 +29,10 @@ export class RecipeComponent implements OnInit {
   operation: FormControl;
   orchestrationFlow: FormControl;
   isCancel: boolean = false;
+  isSaving: boolean = false;
+  saveError: string = '';
   modeType: RecipeTab = this.parentData.tab;
+  private prefilledFlow?: string;
 
   ngOnInit() {
     this.createFormControls();
@@ -37,30 +41,36 @@ export class RecipeComponent implements OnInit {
 
   createFormControls() {
     const dialogData = this.parentData;
+    this.prefilledFlow = undefined;
+    this.modelName = new FormControl('', dialogData.tab === 'Network Recipe' ? Validators.required : []);
+    this.modelVersionId = new FormControl('', Validators.required);
+    this.operation = new FormControl('', Validators.required);
+    this.orchestrationFlow = new FormControl('', Validators.required);
+    this.nfRole = new FormControl('');
+    // The current controller ignores this optional input and persists 180 seconds.
+    this.recipeTimeout = new FormControl('', Validators.pattern(/^\d+$/));
+
     if (!dialogData.addNew && dialogData.fData) {
-      const dd = dialogData.fData;
-      this.modelName = new FormControl(dialogData.tab === 'Network Recipe' ? dialogData.fData.modelName : '');
+      this.recipeTimeout.setValue(dialogData.fData.recipeTimeout);
+      this.operation.setValue(dialogData.fData.action);
+      this.prefilledFlow = this.flowSuffix(dialogData.fData.orchestrationUri);
+      this.orchestrationFlow.setValue(this.prefilledFlow);
       if (dialogData.tab === 'Service Recipe') {
-        this.modelVersionId = new FormControl(dialogData.fData.serviceModelUUID);
+        this.modelVersionId.setValue(dialogData.fData.serviceModelUUID);
       } else {
-        this.modelVersionId = new FormControl(dialogData.fData.versionStr);
+        this.modelVersionId.setValue(dialogData.fData.versionStr);
+      }
+      if (dialogData.tab === 'Network Recipe') {
+        this.modelName.setValue(dialogData.fData.modelName);
       }
       if (dialogData.tab === 'VNF Recipe') {
-        this.nfRole = new FormControl(dialogData.fData.nfRole,);
-      } else {
-        this.nfRole = new FormControl('',);
+        this.nfRole.setValue(dialogData.fData.nfRole);
       }
-      this.recipeTimeout = new FormControl(dd.recipeTimeout);
-      this.operation = new FormControl(dd.action,);
-      this.orchestrationFlow = new FormControl(dd.orchestrationUri,);
-    } else {
-      this.modelName = new FormControl('', );
-      this.modelVersionId = new FormControl('', );
-      this.operation = new FormControl('', );
-      this.orchestrationFlow = new FormControl('',);
-      this.nfRole = new FormControl('',);
-      this.recipeTimeout = new FormControl('',);
     }
+  }
+
+  private flowSuffix(uri: string): string {
+    return uri.replace(/^\/mso\/async\/services\//, '');
   }
 
   getModelType (type: RecipeTab): RecipeRequest['modelType'] {
@@ -84,56 +94,57 @@ export class RecipeComponent implements OnInit {
     });
   }
 
-  onSubmit() {
-    if (this.isCancel) {
+  onSubmit(): void {
+    if (this.isCancel || this.isSaving) {
       return;
     }
-    if (this.myform.valid ) {
-      console.log("Form Submitted!");
-      console.log("formdata", this.myform.value)
-      const values = this.myform.value;
-      const data: RecipeRequest = {
-        modelType: this.getModelType(this.parentData.tab),
-        modelVersionId: values.modelVersionId,
-        operation: values.operation,
-        orchestrationFlow: values.orchestrationFlow,
-        modelName: values.modelName,
-        nfRole: values.nfRole,
-        recipeTimeout: values.recipeTimeout
-      };
-      this.saveServiceRecipes(data);
-      this.myform.reset();
-    } else {
-      this.popup.error("Please fill valid data.");
+    if (this.myform.invalid) {
+      Object.keys(this.myform.controls).forEach(name => this.myform.controls[name].markAsTouched());
+      this.popup.error('Please fill valid data.');
+      return;
     }
+    const values = this.myform.value;
+    const data: RecipeRequest = {
+      modelType: this.getModelType(this.parentData.tab),
+      modelVersionId: values.modelVersionId,
+      operation: values.operation,
+      // The unchanged prefilled suffix has already lost its one server prefix.
+      orchestrationFlow: values.orchestrationFlow === this.prefilledFlow ?
+        values.orchestrationFlow : this.flowSuffix(values.orchestrationFlow),
+      modelName: values.modelName,
+      nfRole: values.nfRole,
+      recipeTimeout: values.recipeTimeout
+    };
+    this.saveServiceRecipes(data);
   }
 
-  closeDialog (evt: any) {
-    this.isCancel = true
-    this.dialogRef.close()
+  closeDialog(evt: any): void {
+    this.isCancel = true;
+    this.dialogRef.close({ saved: false });
   }
 
   saveServiceRecipes(data: RecipeRequest): void {
-    this.data.saveServiceRecipe(data)
-      .subscribe((data) => {
-        console.log(JSON.stringify(data));
-        if(data === null) {
-          this.popup.error('Unable to store recipe: empty response.');
-        } else {
-          if (data.id && data.id != "") {
-            this.popup.info("Data stored in database.");
-          } else if(data.errMsg) {
-            this.popup.error(data.errMsg);
-          }
-        }
+    this.isSaving = true;
+    this.saveError = '';
+    this.data.saveServiceRecipe(data).pipe(
+      finalize(() => {
+        this.isSaving = false;
         this.spinner.hide();
-        this.dialogRef.close()
-      },error => {
-        console.log(error);
-        this.popup.error("Unable to store recipe, Error code:" + error.status);
-        this.spinner.hide();
-        this.dialogRef.close()
+      })
+    ).subscribe(response => {
+      if (response !== null && !('errMsg' in response) &&
+          typeof response.id === 'string' && response.id.trim() !== '') {
+        this.popup.info('Data stored in database.');
+        this.myform.reset();
+        this.dialogRef.close({ saved: true });
+        return;
+      }
+      this.saveError = response === null ? 'Unable to store recipe: empty response.' :
+        response.errMsg || 'Unable to store recipe: invalid save response.';
+      this.popup.error(this.saveError);
+    }, (error: HttpErrorResponse) => {
+      this.saveError = 'Unable to store recipe, Error code:' + error.status;
+      this.popup.error(this.saveError);
     });
   }
 }
-

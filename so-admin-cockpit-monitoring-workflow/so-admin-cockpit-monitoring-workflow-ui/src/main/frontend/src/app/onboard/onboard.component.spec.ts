@@ -102,7 +102,8 @@ describe('Workflow onboarding', () => {
       ).toEqual([]);
     })
   );
-  it('refreshes the active list after closing the recipe dialog', () => {
+  it('refreshes the active list after saving the recipe dialog', () => {
+    dialog.open.and.returnValue({ afterClosed: () => of({ saved: true }) });
     component.currentTab = 'Network Recipe';
     component.addRecipe({ currentTarget: {} });
     expect(dialog.open.calls.mostRecent().args[1].data).toEqual({
@@ -111,6 +112,26 @@ describe('Workflow onboarding', () => {
       fData: undefined
     });
     expect(api.getNetworkRecipe).toHaveBeenCalled();
+  });
+  [undefined, null, { saved: false }].forEach(result => {
+    it('retains the selected list after closing without a save: ' + JSON.stringify(result), () => {
+      dialog.open.and.returnValue({ afterClosed: () => of(result) });
+      component.currentTab = 'Network Recipe';
+      component.addRecipe({ currentTarget: {} });
+      expect(api.getNetworkRecipe).not.toHaveBeenCalled();
+      expect(api.getServiceRecipe.calls.count()).toBe(1);
+      expect(api.getVnfRecipe).not.toHaveBeenCalled();
+    });
+  });
+  ['Service Recipe', 'Network Recipe', 'VNF Recipe'].forEach((tab: any) => {
+    it('reloads only the selected ' + tab + ' after a confirmed save', () => {
+      dialog.open.and.returnValue({ afterClosed: () => of({ saved: true }) });
+      component.currentTab = tab;
+      component.addRecipe({ currentTarget: {} });
+      expect(api.getServiceRecipe.calls.count()).toBe(tab === 'Service Recipe' ? 2 : 1);
+      expect(api.getNetworkRecipe.calls.count()).toBe(tab === 'Network Recipe' ? 1 : 0);
+      expect(api.getVnfRecipe.calls.count()).toBe(tab === 'VNF Recipe' ? 1 : 0);
+    });
   });
   it('does not upload without a selected file', () => {
     component.onSubmit();

@@ -25,7 +25,8 @@ import { DataService } from '../data.service';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   componentImports,
   notificationStub,
@@ -78,6 +79,22 @@ import {
       );
       fixture.detectChanges();
     }
+    function prefill(uri: string) {
+      parent.addNew = false;
+      parent.fData = {
+        serviceModelUUID: 'service-version',
+        versionStr: 'other-version',
+        modelName: 'existing',
+        nfRole: 'role',
+        action: 'delete',
+        orchestrationUri: uri,
+        recipeTimeout: '90'
+      };
+      component.parentData = parent;
+      component.createFormControls();
+      component.createForm();
+      fixture.detectChanges();
+    }
     function submit() {
       fixture.nativeElement.querySelector('button[type="submit"]').click();
       fixture.detectChanges();
@@ -86,6 +103,14 @@ import {
       submit();
       expect(api.saveServiceRecipe).not.toHaveBeenCalled();
       expect(popup.error).toHaveBeenCalledWith('Please fill valid data.');
+      ['modelVersionId', 'operation', 'orchestrationFlow'].forEach(name => {
+        expect(component.myform.get(name).hasError('required')).toBe(true);
+        expect(component.myform.get(name).touched).toBe(true);
+      });
+      if (type === 'Network') {
+        expect(component.modelName.hasError('required')).toBe(true);
+        expect(component.modelName.touched).toBe(true);
+      }
     });
     it('submits the mode-specific JSON payload once', () => {
       fill();
@@ -100,29 +125,43 @@ import {
       if (type === 'VNF') expect(body.nfRole).toBe('firewall');
       expect(api.saveServiceRecipe.calls.count()).toBe(1);
       expect(popup.info).toHaveBeenCalledWith('Data stored in database.');
-      expect(ref.close).toHaveBeenCalled();
+      expect(ref.close).toHaveBeenCalledWith({ saved: true });
+      expect(component.myform.value.modelVersionId).toBe(null);
     });
     it('cancels without saving even when the form is valid', () => {
       fill();
       fixture.nativeElement.querySelector('button').click();
       expect(api.saveServiceRecipe).not.toHaveBeenCalled();
-      expect(ref.close).toHaveBeenCalled();
+      expect(ref.close).toHaveBeenCalledWith({ saved: false });
+      component.onSubmit();
+      expect(api.saveServiceRecipe).not.toHaveBeenCalled();
     });
-    it('shows application save errors and closes the dialog', () => {
+    it('shows application save errors and retains the form for retry', () => {
       api.saveServiceRecipe.and.returnValue(of({ errMsg: 'duplicate' }));
       fill();
+      const values = component.myform.value;
       submit();
       expect(popup.error).toHaveBeenCalledWith('duplicate');
-      expect(ref.close).toHaveBeenCalled();
+      expect(ref.close).not.toHaveBeenCalled();
+      expect(component.myform.value).toEqual(values);
+      expect(fixture.nativeElement.textContent).toContain('duplicate');
     });
-    it('shows HTTP save failures and closes the dialog', () => {
-      api.saveServiceRecipe.and.returnValue(throwError({ status: 500 }));
+    it('shows HTTP save failures and allows a retry without retyping', () => {
+      api.saveServiceRecipe.and.returnValue(throwError(new HttpErrorResponse({ status: 500 })));
       fill();
+      const values = component.myform.value;
       submit();
       expect(popup.error.calls.count()).toBe(1);
       expect(popup.error.calls.mostRecent().args[0]).toContain('recipe');
       expect(popup.error.calls.mostRecent().args[0]).toContain('500');
-      expect(ref.close).toHaveBeenCalled();
+      expect(ref.close).not.toHaveBeenCalled();
+      expect(component.myform.value).toEqual(values);
+      expect(fixture.nativeElement.textContent).toContain('500');
+      api.saveServiceRecipe.and.returnValue(of({ id: 'retry-id' }));
+      submit();
+      expect(api.saveServiceRecipe.calls.count()).toBe(2);
+      expect(api.saveServiceRecipe.calls.mostRecent().args[0].modelVersionId).toBe('uuid');
+      expect(ref.close).toHaveBeenCalledWith({ saved: true });
     });
     it('reports an empty save response once', () => {
       api.saveServiceRecipe.and.returnValue(of(null));
@@ -131,6 +170,103 @@ import {
       expect(popup.info).not.toHaveBeenCalled();
       expect(popup.error.calls.count()).toBe(1);
       expect(popup.error.calls.mostRecent().args[0]).toContain('recipe');
+      expect(ref.close).not.toHaveBeenCalled();
+      expect(component.myform.value.modelVersionId).toBe('uuid');
+    });
+    it('ignores populated recipe data when adding a recipe', () => {
+      parent.fData = {
+        serviceModelUUID: 'existing-service', versionStr: 'existing-version',
+        modelName: 'existing', nfRole: 'role', recipeTimeout: '90',
+        action: 'delete', orchestrationUri: '/mso/async/services/old'
+      };
+      component.createFormControls();
+      component.createForm();
+      fixture.detectChanges();
+      expect(component.myform.value).toEqual({
+        modelName: '', nfRole: '', recipeTimeout: '', modelVersionId: '',
+        operation: '', orchestrationFlow: ''
+      });
+    });
+    it('validates required controls before rendering directives run', () => {
+      component.createFormControls();
+      component.createForm();
+      component.onSubmit();
+      expect(api.saveServiceRecipe).not.toHaveBeenCalled();
+      expect(component.modelVersionId.hasError('required')).toBe(true);
+      expect(component.operation.hasError('required')).toBe(true);
+      expect(component.orchestrationFlow.hasError('required')).toBe(true);
+    });
+    it('keeps fields absent from the server DTO optional', () => {
+      fill();
+      component.myform.patchValue({ recipeTimeout: '', nfRole: '' });
+      fixture.detectChanges();
+      submit();
+      expect(api.saveServiceRecipe.calls.count()).toBe(1);
+      expect(ref.close).toHaveBeenCalledWith({ saved: true });
+    });
+    it('rejects a nonnumeric timeout without losing input', () => {
+      fill();
+      component.recipeTimeout.setValue('later');
+      component.onSubmit();
+      expect(component.recipeTimeout.invalid).toBe(true);
+      expect(component.recipeTimeout.touched).toBe(true);
+      expect(api.saveServiceRecipe).not.toHaveBeenCalled();
+      expect(component.recipeTimeout.value).toBe('later');
+    });
+    it('guards repeated submissions while the save is pending', () => {
+      const pending = new Subject<any>();
+      api.saveServiceRecipe.and.returnValue(pending);
+      fill();
+      const values = component.myform.value;
+      submit();
+      expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(true);
+      expect(component.myform.value).toEqual(values);
+      component.onSubmit();
+      expect(api.saveServiceRecipe.calls.count()).toBe(1);
+      expect(ref.close).not.toHaveBeenCalled();
+      pending.next({ id: 'saved-id' });
+      pending.complete();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(false);
+      expect(ref.close).toHaveBeenCalledWith({ saved: true });
+    });
+    [
+      [{}, 'missing ID'], [{ id: '' }, 'empty ID'], [{ id: '   ' }, 'blank ID'],
+      [{ id: 'saved-id', errMsg: 'Conflict' }, 'error alongside an ID'],
+      [{ id: 'saved-id', errMsg: '' }, 'empty error alongside an ID']
+    ].forEach(([body, label]) => {
+      it('retains input for ' + label + ' and accepts a subsequent retry', () => {
+        api.saveServiceRecipe.and.returnValue(of(body));
+        fill();
+        const values = component.myform.value;
+        submit();
+        expect(ref.close).not.toHaveBeenCalled();
+        expect(component.myform.value).toEqual(values);
+        expect(popup.info).not.toHaveBeenCalled();
+        expect(popup.error.calls.count()).toBe(1);
+        expect(fixture.nativeElement.textContent).toContain(
+          label === 'error alongside an ID' ? 'Conflict' : 'recipe'
+        );
+        expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(false);
+        api.saveServiceRecipe.and.returnValue(of({ id: 'retry-id' }));
+        submit();
+        expect(api.saveServiceRecipe.calls.count()).toBe(2);
+        expect(api.saveServiceRecipe.calls.mostRecent().args[0].modelVersionId).toBe('uuid');
+        expect(ref.close).toHaveBeenCalledWith({ saved: true });
+        expect(fixture.nativeElement.querySelector('[role="alert"]')).toBe(null);
+      });
+    });
+    [
+      ['/mso/async/services/create', 'create'],
+      ['/flow/mso/async/services/create', '/flow/mso/async/services/create'],
+      ['/mso/async/services//mso/async/services/create', '/mso/async/services/create']
+    ].forEach(([input, expected]) => {
+      it('strips only one leading server prefix from submitted URI ' + input, () => {
+        fill();
+        component.orchestrationFlow.setValue(input);
+        submit();
+        expect(api.saveServiceRecipe.calls.mostRecent().args[0].orchestrationFlow).toBe(expected);
+      });
     });
     it('initializes an empty form when edit data is absent', () => {
       parent.addNew = false;
@@ -141,26 +277,50 @@ import {
       expect(component.myform.value.modelVersionId).toBe('');
       expect(component.myform.value.operation).toBe('');
     });
-    it('loads an existing recipe into the edit form', () => {
-      parent.addNew = false;
-      parent.fData = {
-        serviceModelUUID: 'service-version',
-        versionStr: 'other-version',
-        modelName: 'existing',
-        nfRole: 'role',
-        action: 'delete',
-        orchestrationUri: '/old',
-        recipeTimeout: '90'
-      };
-      component.parentData = parent;
-      component.createFormControls();
-      component.createForm();
+    it('preserves one leading prefix in the unchanged prefilled suffix', () => {
+      prefill('/mso/async/services//mso/async/services/create');
+      expect(component.orchestrationFlow.value).toBe('/mso/async/services/create');
+      submit();
+      expect(api.saveServiceRecipe.calls.mostRecent().args[0].orchestrationFlow)
+        .toBe('/mso/async/services/create');
+      expect(ref.close).toHaveBeenCalledWith({ saved: true });
+    });
+    it('preserves the prefilled suffix through a failed save and retry', () => {
+      prefill('/mso/async/services//mso/async/services/create');
+      api.saveServiceRecipe.and.returnValue(of({ errMsg: 'Retry the save' }));
+      submit();
+      expect(api.saveServiceRecipe.calls.mostRecent().args[0].orchestrationFlow)
+        .toBe('/mso/async/services/create');
+      expect(component.orchestrationFlow.value).toBe('/mso/async/services/create');
+      expect(ref.close).not.toHaveBeenCalled();
+      api.saveServiceRecipe.and.returnValue(of({ id: 'retry-id' }));
+      submit();
+      expect(api.saveServiceRecipe.calls.count()).toBe(2);
+      expect(api.saveServiceRecipe.calls.mostRecent().args[0].orchestrationFlow)
+        .toBe('/mso/async/services/create');
+      expect(ref.close).toHaveBeenCalledWith({ saved: true });
+    });
+    it('normalizes a newly entered full URI after prefilling a recipe', () => {
+      prefill('/mso/async/services//mso/async/services/create');
+      const input = fixture.nativeElement.querySelector('#recipe-orchestrationFlow');
+      input.value = '/mso/async/services/replace';
+      input.dispatchEvent(new Event('input'));
       fixture.detectChanges();
+      submit();
+      expect(api.saveServiceRecipe.calls.mostRecent().args[0].orchestrationFlow).toBe('replace');
+    });
+    it('loads an existing recipe into the edit form', () => {
+      prefill('/mso/async/services/old');
       expect(component.myform.value.modelVersionId).toBe(
         type === 'Service' ? 'service-version' : 'other-version'
       );
       expect(component.myform.value.operation).toBe('delete');
       if (type === 'VNF') expect(component.myform.value.nfRole).toBe('role');
+      if (type === 'Network') expect(component.myform.value.modelName).toBe('existing');
+      expect(component.myform.value.recipeTimeout).toBe('90');
+      expect(component.myform.value.orchestrationFlow).toBe('old');
+      submit();
+      expect(api.saveServiceRecipe.calls.mostRecent().args[0].orchestrationFlow).toBe('old');
     });
   })
 );

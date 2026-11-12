@@ -21,15 +21,14 @@
             <div class="form-group"
                 *ngIf="modeType == 'VNF Recipe'"
                 [ngClass]="{
-                'has-danger': modelName.invalid && (modelName.dirty || modelName.touched),
-                'has-success': modelName.valid && (modelName.dirty || modelName.touched)
+                'has-danger': nfRole.invalid && (nfRole.dirty || nfRole.touched),
+                'has-success': nfRole.valid && (nfRole.dirty || nfRole.touched)
             }">
                 <label for="recipe-nfRole">NF Role</label>
                 <input type="text"
                     class="form-control"
                     id="recipe-nfRole"
-                    formControlName="nfRole"
-                    required>
+                    formControlName="nfRole">
             </div>
             <div class="form-group"
                 [ngClass]="{
@@ -70,21 +69,24 @@
             <div class="form-group"
                 *ngIf="modeType == 'Service Recipe'"
                 [ngClass]="{
-                'has-danger': modelName.invalid && (modelName.dirty || modelName.touched),
-                'has-success': modelName.valid && (modelName.dirty || modelName.touched)
+                'has-danger': recipeTimeout.invalid && (recipeTimeout.dirty || recipeTimeout.touched),
+                'has-success': recipeTimeout.valid && (recipeTimeout.dirty || recipeTimeout.touched)
             }">
                 <label for="recipe-recipeTimeout">Recipe Timeout</label>
                 <input type="text"
                     class="form-control"
                     id="recipe-recipeTimeout"
                     formControlName="recipeTimeout"
-                    required>
+                    aria-describedby="recipe-timeout-help">
+                <small id="recipe-timeout-help">The server currently stores a timeout of 180 seconds.</small>
             </div>
+            <p *ngIf="saveError" role="alert">{{saveError}}</p>
             <button type="button" style="margin-right: 10px;"
                 class="btn btn-primary"
                 (click)="closeDialog($event)">Cancel
             </button>
             <button type="submit"
+                    [disabled]="isSaving"
                     class="btn btn-primary">Submit
             </button>
         </form>

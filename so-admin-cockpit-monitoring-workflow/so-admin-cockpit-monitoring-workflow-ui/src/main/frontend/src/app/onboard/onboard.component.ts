@@ -88,8 +88,9 @@ export class OnboardComponent implements OnInit {
       data: dialogData
     });
     dialogRef.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
-      this.changeTab(this.currentTab)
+      if (result && result.saved) {
+        this.changeTab(this.currentTab);
+      }
     });
   }
 
