@@ -90,8 +90,8 @@ import {
     it('submits the mode-specific JSON payload once', () => {
       fill();
       submit();
-      const body = JSON.parse(api.saveServiceRecipe.calls.mostRecent().args[0]);
-      expect(body.modelType).toBe(type);
+      const body = api.saveServiceRecipe.calls.mostRecent().args[0];
+      expect(body.modelType).toBe(type === 'VNF' ? 'Vnf' : type);
       expect(body.modelVersionId).toBe('uuid');
       expect(body.operation).toBe('create');
       expect(body.orchestrationFlow).toBe('/flow');
@@ -119,20 +119,40 @@ import {
       api.saveServiceRecipe.and.returnValue(throwError({ status: 500 }));
       fill();
       submit();
-      expect(popup.error).toHaveBeenCalled();
+      expect(popup.error.calls.count()).toBe(1);
+      expect(popup.error.calls.mostRecent().args[0]).toContain('recipe');
+      expect(popup.error.calls.mostRecent().args[0]).toContain('500');
       expect(ref.close).toHaveBeenCalled();
     });
+    it('reports an empty save response once', () => {
+      api.saveServiceRecipe.and.returnValue(of(null));
+      fill();
+      submit();
+      expect(popup.info).not.toHaveBeenCalled();
+      expect(popup.error.calls.count()).toBe(1);
+      expect(popup.error.calls.mostRecent().args[0]).toContain('recipe');
+    });
+    it('initializes an empty form when edit data is absent', () => {
+      parent.addNew = false;
+      parent.fData = undefined;
+      component.parentData = parent;
+      component.createFormControls();
+      component.createForm();
+      expect(component.myform.value.modelVersionId).toBe('');
+      expect(component.myform.value.operation).toBe('');
+    });
     it('loads an existing recipe into the edit form', () => {
-      component.parentData.addNew = false;
-      component.parentData.fData = {
+      parent.addNew = false;
+      parent.fData = {
         serviceModelUUID: 'service-version',
         versionStr: 'other-version',
         modelName: 'existing',
         nfRole: 'role',
         action: 'delete',
         orchestrationUri: '/old',
-        recipeTimeout: 90
+        recipeTimeout: '90'
       };
+      component.parentData = parent;
       component.createFormControls();
       component.createForm();
       fixture.detectChanges();

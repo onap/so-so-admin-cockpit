@@ -21,9 +21,8 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import { Injectable } from '@angular/core';
-import { ToastrNotificationService } from './toastr-notification-service.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -31,23 +30,10 @@ import { Observable, of, throwError } from 'rxjs';
 /** Handles HttpClient errors */
 export class HttpErrorHandlerService {
 
-  constructor(private popup: ToastrNotificationService) { }
-
-  handleError(operation = 'operation', url = 'url') {
-    return (error: HttpErrorResponse) => {
-      if (error.error instanceof ErrorEvent) {
-        console.error('An error occurred:', error.error.message);
-        this.popup.error("An error occurred for operation: " + operation + " using url: " + url + " Detail: " + error.error.message);
-        return throwError("An error occurred for operation: " + operation);
-      }
-      if (error.status == 500 || error.status == 0) {
-        this.popup.error("Internal Service Error occured for operation: " + operation + " please check backend service log. status code: " + error.status);
-      }
-      console.error(
-        'Backend returned status code: ', error.status + ' from URL ' + url);
-      return throwError(error.error || "Internal Service Error occured for operation: " +
-        operation + ". Please check backend service log. Status code: " + error.status);
+  handleError(operation: string, url: string): (error: HttpErrorResponse) => Observable<never> {
+    return (error: HttpErrorResponse): Observable<never> => {
+      console.error('HTTP ' + operation + ' failed for ' + url + ': ' + error.status);
+      return throwError(error);
     };
-
   }
 }

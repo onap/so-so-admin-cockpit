@@ -4,7 +4,9 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
-import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { RecipeDialogData, RecipeDialogResult, RecipeTab } from '../model/recipe-dialog.model';
+import { RecipeRequest } from '../model/recipeRequest.model';
 
 @Component({
   selector: 'app-recipe',
@@ -14,8 +16,8 @@ import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog
 export class RecipeComponent implements OnInit {
 
   constructor(private data: DataService, private spinner: NgxSpinnerService, private http: HttpClient,
-    private popup: ToastrNotificationService,public dialogRef: MatDialogRef<RecipeComponent>,
-    @Inject(MAT_DIALOG_DATA) public parentData: any) { }
+    private popup: ToastrNotificationService,public dialogRef: MatDialogRef<RecipeComponent, RecipeDialogResult>,
+    @Inject(MAT_DIALOG_DATA) public parentData: RecipeDialogData) { }
 
   fileList = [];
   myform: FormGroup;
@@ -26,7 +28,7 @@ export class RecipeComponent implements OnInit {
   operation: FormControl;
   orchestrationFlow: FormControl;
   isCancel: boolean = false;
-  modeType: string = this.parentData.tab;
+  modeType: RecipeTab = this.parentData.tab;
 
   ngOnInit() {
     this.createFormControls();
@@ -34,17 +36,17 @@ export class RecipeComponent implements OnInit {
   }
 
   createFormControls() {
-    let dd: any;
-    if (!this.parentData.addNew) {
-      let dd = this.parentData.fData;
-      this.modelName = new FormControl(dd.modelName);
-      if (this.parentData.tab === 'Service Recipe') {
-        this.modelVersionId = new FormControl(dd.serviceModelUUID);
+    const dialogData = this.parentData;
+    if (!dialogData.addNew && dialogData.fData) {
+      const dd = dialogData.fData;
+      this.modelName = new FormControl(dialogData.tab === 'Network Recipe' ? dialogData.fData.modelName : '');
+      if (dialogData.tab === 'Service Recipe') {
+        this.modelVersionId = new FormControl(dialogData.fData.serviceModelUUID);
       } else {
-        this.modelVersionId = new FormControl(dd.versionStr);
+        this.modelVersionId = new FormControl(dialogData.fData.versionStr);
       }
-      if (this.parentData.tab === 'VNF Recipe') {
-        this.nfRole = new FormControl(dd.nfRole,);
+      if (dialogData.tab === 'VNF Recipe') {
+        this.nfRole = new FormControl(dialogData.fData.nfRole,);
       } else {
         this.nfRole = new FormControl('',);
       }
@@ -61,13 +63,13 @@ export class RecipeComponent implements OnInit {
     }
   }
 
-  getModelType (type: string) {
+  getModelType (type: RecipeTab): RecipeRequest['modelType'] {
     if(type == 'Service Recipe') {
       return 'Service'
     } else if(type == 'Network Recipe') {
       return 'Network'
     } else {
-      return 'VNF'
+      return 'Vnf'
     }
   }
 
@@ -80,9 +82,6 @@ export class RecipeComponent implements OnInit {
       operation: this.operation,
       orchestrationFlow: this.orchestrationFlow,
     });
-    if(this.parentData.isAdd === false) {
-      this.myform = this.parentData.fData;
-    }
   }
 
   onSubmit() {
@@ -92,9 +91,17 @@ export class RecipeComponent implements OnInit {
     if (this.myform.valid ) {
       console.log("Form Submitted!");
       console.log("formdata", this.myform.value)
-      let data = this.myform.value;
-      data['modelType'] = this.getModelType(this.parentData.tab);
-      this.saveServiceRecipes(JSON.stringify(data));
+      const values = this.myform.value;
+      const data: RecipeRequest = {
+        modelType: this.getModelType(this.parentData.tab),
+        modelVersionId: values.modelVersionId,
+        operation: values.operation,
+        orchestrationFlow: values.orchestrationFlow,
+        modelName: values.modelName,
+        nfRole: values.nfRole,
+        recipeTimeout: values.recipeTimeout
+      };
+      this.saveServiceRecipes(data);
       this.myform.reset();
     } else {
       this.popup.error("Please fill valid data.");
@@ -106,11 +113,13 @@ export class RecipeComponent implements OnInit {
     this.dialogRef.close()
   }
 
-  saveServiceRecipes(data: any): void {
+  saveServiceRecipes(data: RecipeRequest): void {
     this.data.saveServiceRecipe(data)
-      .subscribe((data: any) => {
+      .subscribe((data) => {
         console.log(JSON.stringify(data));
-        if(data != null) {
+        if(data === null) {
+          this.popup.error('Unable to store recipe: empty response.');
+        } else {
           if (data.id && data.id != "") {
             this.popup.info("Data stored in database.");
           } else if(data.errMsg) {
@@ -121,7 +130,7 @@ export class RecipeComponent implements OnInit {
         this.dialogRef.close()
       },error => {
         console.log(error);
-        this.popup.error("Unable to store bpmn data, Error code:" + error.status);
+        this.popup.error("Unable to store recipe, Error code:" + error.status);
         this.spinner.hide();
         this.dialogRef.close()
     });

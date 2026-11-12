@@ -20,8 +20,18 @@ SPDX-License-Identifier: Apache-2.0
 @authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com
 */
 
+export type JsonValue = string | number | boolean | null | JsonArray | JsonObject;
+export interface JsonArray extends Array<JsonValue> {}
+export interface JsonObject { [key: string]: JsonValue; }
+
 export interface VariableInstance {
   name: string;
-  value: string;
+  value: JsonValue;
+  type: string;
+}
+
+export interface VariableInstanceDisplay {
+  name: string;
+  value: string | number | boolean | null;
   type: string;
 }

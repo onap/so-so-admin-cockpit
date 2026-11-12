@@ -108,7 +108,7 @@ describe('Workflow onboarding', () => {
     expect(dialog.open.calls.mostRecent().args[1].data).toEqual({
       tab: 'Network Recipe',
       addNew: true,
-      fData: {}
+      fData: undefined
     });
     expect(api.getNetworkRecipe).toHaveBeenCalled();
   });
@@ -160,5 +160,57 @@ describe('Workflow onboarding', () => {
     component.onSubmit();
     expect(popup.error).toHaveBeenCalled();
     expect(spinner.hide).toHaveBeenCalled();
+  });
+  [
+    ['getServiceRecipe', 'service'],
+    ['getNetworkRecipe', 'network'],
+    ['getVnfRecipe', 'VNF']
+  ].forEach(([method, label]) => {
+    [{ errMsg: 'Unable to process.' }, null].forEach((body) => {
+      it('reports a ' + label + ' list application failure once: ' + JSON.stringify(body), () => {
+        api[method].and.returnValue(of(body));
+        component[method]();
+        expect(popup.error.calls.count()).toBe(1);
+        expect(popup.error.calls.mostRecent().args[0]).toContain(body ? 'Unable to process.' : label);
+        expect(spinner.hide).toHaveBeenCalled();
+      });
+    });
+    it('reports a ' + label + ' list transport failure once with its status', () => {
+      api[method].and.returnValue(throwError({ status: 503 }));
+      component[method]();
+      expect(popup.error.calls.count()).toBe(1);
+      expect(popup.error.calls.mostRecent().args[0]).toContain('503');
+      expect(popup.error.calls.mostRecent().args[0]).toContain(label);
+    });
+  });
+  it('reports an empty workflow upload response once', () => {
+    choose('workflow.war');
+    api.onboardBPMNInfra.and.returnValue(of(null));
+    component.onSubmit();
+    expect(popup.error.calls.count()).toBe(1);
+    expect(popup.error.calls.mostRecent().args[0]).toContain('upload');
+    expect(popup.info).not.toHaveBeenCalled();
+    expect(spinner.hide).toHaveBeenCalled();
+  });
+  [
+    [{ result: 'true' }, 'Workflow uploaded.', true],
+    [{ result: 'false', message: 'Invalid package' }, 'Invalid package', false],
+    [{}, 'Unable to upload bpmn file.', false]
+  ].forEach(([body, message, success]) => {
+    it('reports the upload outcome for ' + JSON.stringify(body), () => {
+      choose('workflow.war');
+      api.onboardBPMNInfra.and.returnValue(of(body));
+      component.onSubmit();
+      expect(success ? popup.info : popup.error).toHaveBeenCalledWith(message);
+    });
+  });
+  ['Service Recipe', 'VNF Recipe'].forEach((tab: any) => {
+    it('opens a typed empty dialog for ' + tab, () => {
+      component.currentTab = tab;
+      component.addRecipe({ currentTarget: {} });
+      expect(dialog.open.calls.mostRecent().args[1].data).toEqual({
+        tab, addNew: true, fData: undefined
+      });
+    });
   });
 });

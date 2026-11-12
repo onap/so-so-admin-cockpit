@@ -200,4 +200,18 @@ describe('Process inspection', () => {
     tick();
     expect(viewer.importXML).not.toHaveBeenCalled();
   }));
+  it('formats object variables without mutating the raw response', fakeAsync(() => {
+    const rows = [
+      { name: 'settings', type: 'Object', value: { enabled: true, zones: ['west', null, 2] } },
+      { name: 'empty', type: 'Object', value: null },
+      { name: 'count', type: 'Integer', value: 3 }
+    ];
+    api.getVariableInstance.and.returnValue(of(rows));
+    start();
+    expect(rows[0].value).toEqual({ enabled: true, zones: ['west', null, 2] });
+    expect(Object.is(component.variableInstance[0], rows[0])).toBe(false);
+    expect(component.variableInstance[0].value).toBe('{\n  "enabled": true,\n  "zones": [\n    "west",\n    null,\n    2\n  ]\n}');
+    expect(component.variableInstance[1].value).toBeNull();
+    expect(component.variableInstance[2].value).toBe(3);
+  }));
 });

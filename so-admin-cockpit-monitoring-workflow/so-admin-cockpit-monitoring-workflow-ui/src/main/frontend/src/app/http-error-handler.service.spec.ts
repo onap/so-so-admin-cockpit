@@ -21,23 +21,14 @@ SPDX-License-Identifier: Apache-2.0
 
 import { HttpErrorResponse } from '@angular/common/http';
 import { HttpErrorHandlerService } from './http-error-handler.service';
-import { notificationStub } from './testing/component-test';
-describe('HTTP error messages', () => {
+describe('HTTP error propagation', () => {
   [0, 400, 404, 500].forEach((status) =>
-    it('returns a useful fallback for an empty ' + status + ' error', () => {
-      const popup = notificationStub();
-      const handler = new HttpErrorHandlerService(popup);
-      handler
-        .handleError(
-          'POST',
-          '/example'
-        )(new HttpErrorResponse({ status }))
-        .subscribe(
-          () => fail('expected error'),
-          (e) => expect(e).toContain('Status code: ' + status)
-        );
-      expect(popup.error.calls.count()).toBe(
-        status === 0 || status === 500 ? 1 : 0
+    it('preserves the original HTTP ' + status + ' response without notifying', () => {
+      const handler = new HttpErrorHandlerService();
+      const error = new HttpErrorResponse({ status, url: '/example', error: { errMsg: 'failure' } });
+      handler.handleError('POST', '/example')(error).subscribe(
+        () => fail('expected error'),
+        (received) => expect(received).toBe(error)
       );
     })
   );

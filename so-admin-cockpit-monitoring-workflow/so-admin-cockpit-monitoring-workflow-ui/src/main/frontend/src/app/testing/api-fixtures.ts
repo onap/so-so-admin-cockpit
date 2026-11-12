@@ -19,6 +19,10 @@ SPDX-License-Identifier: Apache-2.0
 
 */
 
+import { ServiceRecipe } from '../model/serviceRecipe.model';
+import { NetworkRecipe } from '../model/networkRecipe.model';
+import { VnfRecipe } from '../model/vnfRecipe.model';
+
 export const process = {
   processInstanceId: 'process-1',
   processDefinitionId: 'definition-1',
@@ -44,4 +48,23 @@ export const request = {
   serviceType: 'test',
   startTime: '1',
   endTime: '2'
+};
+
+export const serviceRecipe: ServiceRecipe = {
+  id: '1', serviceModelUUID: 'service-uuid', paramXsd: 'null', action: 'create',
+  description: 'create orchestration flow for template demo',
+  orchestrationUri: '/mso/async/services/flow', recipeTimeout: '180',
+  serviceTimeoutInterim: 'null', created: '2026-11-12 08:00:00.0'
+};
+export const networkRecipe: NetworkRecipe = {
+  id: '2', modelName: 'demo', paramXsd: 'null', action: 'create',
+  description: 'create orchestration flow for template demo',
+  orchestrationUri: '/mso/async/services/flow', recipeTimeout: '180',
+  versionStr: 'network-version', serviceType: 'null', created: '2026-11-12 08:00:00.0'
+};
+export const vnfRecipe: VnfRecipe = {
+  id: '3', nfRole: 'null', paramXsd: 'null', vfModuleId: 'null', action: 'create',
+  description: 'create orchestration flow for template demo',
+  orchestrationUri: '/mso/async/services/flow', recipeTimeout: '180',
+  versionStr: 'vnf-version', serviceType: 'null', created: '2026-11-12 08:00:00.0'
 };

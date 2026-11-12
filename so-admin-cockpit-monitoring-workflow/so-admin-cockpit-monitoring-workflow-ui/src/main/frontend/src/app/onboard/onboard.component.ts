@@ -10,6 +10,7 @@ import { VnfRecipe } from '../model/vnfRecipe.model';
 import { Constants } from './onboard.constant';
 import { MatDialog } from '@angular/material/dialog';
 import { RecipeComponent } from '../recipe/recipe.component';
+import { RecipeDialogData, RecipeDialogResult, RecipeTab } from '../model/recipe-dialog.model';
 
 @Component({
   selector: 'app-onboard',
@@ -30,7 +31,7 @@ export class OnboardComponent implements OnInit {
   displayedNetworkColumns = Constants.DISPLAYED_COLUMNS_NETWORK;
   displayedVnfColumns = Constants.DISPLAYED_COLUMNS_VNF;
   pageSizeOptions = Constants.DEFAULT_PAGE_SIZE_OPTIONS;
-  currentTab:String = 'Service Recipe'
+  currentTab: RecipeTab = 'Service Recipe'
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
@@ -73,14 +74,18 @@ export class OnboardComponent implements OnInit {
     if (evt.currentTarget) {
       isAdd = true
     }
-    const dialogRef = this.dialog.open(RecipeComponent, {
+    let dialogData: RecipeDialogData;
+    if (this.currentTab === 'Service Recipe') {
+      dialogData = { tab: this.currentTab, addNew: isAdd, fData: isAdd ? undefined : evt };
+    } else if (this.currentTab === 'Network Recipe') {
+      dialogData = { tab: this.currentTab, addNew: isAdd, fData: isAdd ? undefined : evt };
+    } else {
+      dialogData = { tab: this.currentTab, addNew: isAdd, fData: isAdd ? undefined : evt };
+    }
+    const dialogRef = this.dialog.open<RecipeComponent, RecipeDialogData, RecipeDialogResult>(RecipeComponent, {
       height: '500px',
       width: '600px',
-      data: {
-        tab: this.currentTab,
-        addNew: isAdd,
-        fData: isAdd ? {} : evt
-      }
+      data: dialogData
     });
     dialogRef.afterClosed().subscribe(result => {
       console.log('The dialog was closed');
@@ -90,7 +95,17 @@ export class OnboardComponent implements OnInit {
 
   getServiceRecipe () {
     this.data.getServiceRecipe()
-      .subscribe((data: any) => {
+      .subscribe((data) => {
+        if (data === null) {
+          this.popup.error('Unable to load service recipes: empty response.');
+          this.spinner.hide();
+          return;
+        }
+        if ('errMsg' in data) {
+          this.popup.error(data.errMsg);
+          this.spinner.hide();
+          return;
+        }
         console.log(JSON.stringify(data));
         this.serviceRecipe = new MatTableDataSource<ServiceRecipe>(data.serviceRecipes);
         this.serviceRecipe.sort = this.sort;
@@ -98,31 +113,51 @@ export class OnboardComponent implements OnInit {
         this.serviceRecipe.paginator.firstPage();
       },error => {
         console.log(error);
-        console.log("Unable to store bpmn data, Error code:" + error.status);
+        this.popup.error("Unable to load service recipes, Error code:" + error.status);
         this.spinner.hide();
     });
   }
 
   getNetworkRecipe () {
     this.data.getNetworkRecipe()
-      .subscribe((data: any) => {
+      .subscribe((data) => {
+        if (data === null) {
+          this.popup.error('Unable to load network recipes: empty response.');
+          this.spinner.hide();
+          return;
+        }
+        if ('errMsg' in data) {
+          this.popup.error(data.errMsg);
+          this.spinner.hide();
+          return;
+        }
         this.networkRecipe = new MatTableDataSource<NetworkRecipe>(data.networkRecipes);
         console.log(JSON.stringify(data));
       },error => {
         console.log(error);
-        console.log("Unable to store bpmn data, Error code:" + error.status);
+        this.popup.error("Unable to load network recipes, Error code:" + error.status);
         this.spinner.hide();
     });
   }
 
   getVnfRecipe () {
     this.data.getVnfRecipe()
-      .subscribe((data: any) => {
+      .subscribe((data) => {
+        if (data === null) {
+          this.popup.error('Unable to load VNF recipes: empty response.');
+          this.spinner.hide();
+          return;
+        }
+        if ('errMsg' in data) {
+          this.popup.error(data.errMsg);
+          this.spinner.hide();
+          return;
+        }
         this.vnfRecipe = new MatTableDataSource<VnfRecipe>(data.vnfRecipes);
         console.log(JSON.stringify(data));
       },error => {
         console.log(error);
-        console.log("Unable to store bpmn data, Error code:" + error.status);
+        this.popup.error("Unable to load VNF recipes, Error code:" + error.status);
         this.spinner.hide();
     });
   }
@@ -159,17 +194,19 @@ export class OnboardComponent implements OnInit {
       formData.append('file', file, file.name);
     });
     this.data.onboardBPMNInfra(formData)
-      .subscribe((data: any) => {
+      .subscribe((data) => {
         this.spinner.hide();
         console.log(JSON.stringify(data));
-        if(data != null) {
+        if(data !== null) {
           if(data.result == "true") {
-            this.popup.info(data.message);
+            this.popup.info(data.message || 'Workflow uploaded.');
           } else if(data.errMsg) {
             this.popup.error(data.errMsg);
           } else {
-            this.popup.error(data.message);
+            this.popup.error(data.message || 'Unable to upload bpmn file.');
           }
+        } else {
+          this.popup.error('Unable to upload bpmn file: empty response.');
         }
       },error => {
         console.log(error);

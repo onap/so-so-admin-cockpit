@@ -33,7 +33,7 @@ import { CommonModule } from '@angular/common';
 import Viewer from 'bpmn-js/dist/bpmn-navigated-viewer.production.min.js';
 import { ViewEncapsulation } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
-import { VariableInstance } from '../model/variableInstance.model';
+import { VariableInstance, VariableInstanceDisplay } from '../model/variableInstance.model';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { ElementRef, ViewChild } from '@angular/core';
@@ -66,7 +66,7 @@ export class DetailsComponent implements OnInit, OnDestroy {
 
   processDefinition: ProcessDefinitionDetail;
 
-  variableInstance: VariableInstance[];
+  variableInstance: VariableInstanceDisplay[];
 
   displayedColumns = ['activityId', 'activityName', 'activityType', 'startTime', 'endTime', 'durationInMillis'];
 
@@ -210,20 +210,12 @@ export class DetailsComponent implements OnInit, OnDestroy {
     this.data.getVariableInstance(procInstId).subscribe(
       (data: VariableInstance[]) => {
         if (load !== this.activeLoad) { return; }
-        this.variableInstance = [];
-        for (let i = 0; i < data.length; i++) {
-          var value = data[i]['value'];
-          var type = data[i]['type'];
-          if ((type == 'Object') && !(value == null)) {
-            try {
-              data[i]['value'] = JSON.stringify(value, null, 2);
-            }
-            catch (error) {
-              console.log("Unable to \nError Code: " + error);
-            }
-          }
-          this.variableInstance[i] = data[i];
-        }
+        this.variableInstance = data.map(variable => {
+          const rawValue = variable.value;
+          const value = typeof rawValue === 'object'
+            ? (rawValue === null ? null : JSON.stringify(rawValue, null, 2)) : rawValue;
+          return { name: variable.name, type: variable.type, value };
+        });
         console.log(data);
       }, error => {
         if (load !== this.activeLoad) { return; }

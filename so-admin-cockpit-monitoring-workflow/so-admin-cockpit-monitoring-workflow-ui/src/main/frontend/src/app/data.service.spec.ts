@@ -28,7 +28,7 @@ import { DataService } from './data.service';
 import { ToastrNotificationService } from './toastr-notification-service.service';
 import { environment } from '../environments/environment';
 import { notificationStub } from './testing/component-test';
-import { request, process, activity } from './testing/api-fixtures';
+import { request, process, activity, serviceRecipe, networkRecipe, vnfRecipe } from './testing/api-fixtures';
 describe('DataService HTTP contract', () => {
   let service: DataService, http: HttpTestingController, popup: any;
   const base = environment.soMonitoringBackendURL;
@@ -80,18 +80,18 @@ describe('DataService HTTP contract', () => {
     [
       'getProcessDefinition',
       '/process-definition/id',
-      { processDefinitionXml: '<xml/>' },
+      { processDefinitionId: 'id', processDefinitionXml: '<xml/>' },
       'id'
     ],
     [
       'getVariableInstance',
       '/variable-instance/id',
-      [{ name: 'region', value: 'west' }],
+      [{ name: 'region', type: 'String', value: 'west' }, { name: 'config', type: 'Object', value: { enabled: true, values: [null, 4] } }],
       'id'
     ],
-    ['getServiceRecipe', '/serviceRecipes', { serviceRecipes: [] }],
-    ['getNetworkRecipe', '/networkRecipes', { networkRecipes: [] }],
-    ['getVnfRecipe', '/vnfRecipes', { vnfRecipes: [] }]
+    ['getServiceRecipe', '/serviceRecipes', { serviceRecipes: [serviceRecipe] }],
+    ['getNetworkRecipe', '/networkRecipes', { networkRecipes: [networkRecipe] }],
+    ['getVnfRecipe', '/vnfRecipes', { vnfRecipes: [vnfRecipe] }]
   ].forEach(([method, path, value, id]: any[]) => {
     it('returns ' + path + ' response without changing its shape', () => {
       service[method](id).subscribe((data) => expect(data).toEqual(value));
@@ -113,53 +113,100 @@ describe('DataService HTTP contract', () => {
     req.flush({ result: 'true' });
   });
   it('posts the recipe JSON exactly once', () => {
-    const body = JSON.stringify({
-      modelType: 'Service',
-      modelVersionId: 'uuid'
-    });
+    const body = {
+      modelType: 'Service' as 'Service',
+      modelVersionId: 'uuid',
+      operation: 'create',
+      orchestrationFlow: 'flow'
+    };
+    const response = Object.assign({}, body, { id: '1' });
     service
       .saveServiceRecipe(body)
-      .subscribe((data) => expect(data).toEqual({ id: 1 }));
+      .subscribe((data) => expect(data).toEqual(response));
     const req = http.expectOne(base + '/serviceRecipes');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toBe(body);
     expect(req.request.headers.get('Content-Type')).toBe('application/json');
-    req.flush({ id: 1 });
+    expect(req.request.serializeBody()).toBe('{"modelType":"Service","modelVersionId":"uuid","operation":"create","orchestrationFlow":"flow"}');
+    req.flush(response, { status: 201, statusText: 'Created' });
   });
   [400, 404, 500].forEach((status) =>
     it(
-      'propagates HTTP ' + status + ' body and notifies server failures',
+      'retains HTTP ' + status + ' status and body without notifying',
       () => {
         const body = { message: 'failure' };
         service.getVariableInstance('id').subscribe(
           () => fail('expected failure'),
-          (error) => expect(error).toEqual(body)
+          (error) => {
+            expect(error.status).toBe(status);
+            expect(error.error).toEqual(body);
+            expect(error.url).toBe(base + '/variable-instance/id');
+          }
         );
         http
           .expectOne(base + '/variable-instance/id')
           .flush(body, { status, statusText: 'Failure' });
-        expect(popup.error.calls.count()).toBe(status === 500 ? 1 : 0);
+        expect(popup.error).not.toHaveBeenCalled();
       }
     )
   );
   it('rejects a failed Promise request', async () => {
     const promise = service.getProcessInstance('id').then(
       () => fail('expected rejection'),
-      (e) => expect(e).toEqual({ message: 'missing' })
+      (e) => {
+        expect(e.status).toBe(404);
+        expect(e.error).toEqual({ message: 'missing' });
+      }
     );
     http
       .expectOne(base + '/process-instance/id')
       .flush({ message: 'missing' }, { status: 404, statusText: 'Not Found' });
     await promise;
   });
-  it('propagates network errors and notifies the user', () => {
+  it('retains network error details without notifying', () => {
     service.getVariableInstance('id').subscribe(
       () => fail('expected failure'),
-      (e) => expect(e).toContain('GET')
+      (e) => {
+        expect(e.status).toBe(0);
+        expect(e.error.message).toBe('offline');
+      }
     );
     http
       .expectOne(base + '/variable-instance/id')
       .error(new ErrorEvent('network', { message: 'offline' }));
-    expect(popup.error).toHaveBeenCalledWith(jasmine.stringMatching('offline'));
+    expect(popup.error).not.toHaveBeenCalled();
+  });
+  [
+    ['getServiceRecipe', '/serviceRecipes'],
+    ['getNetworkRecipe', '/networkRecipes'],
+    ['getVnfRecipe', '/vnfRecipes']
+  ].forEach(([method, path]) => {
+    [{ errMsg: 'Unable to process.' }, null].forEach((body) => {
+      it('preserves the application error or null body for ' + path + ': ' + JSON.stringify(body), () => {
+        service[method]().subscribe((data) => expect(data).toEqual(body));
+        http.expectOne(base + path).flush(body);
+        expect(popup.error).not.toHaveBeenCalled();
+      });
+    });
+  });
+  [{ errMsg: 'The service template does not exist.' }, null].forEach((body) => {
+    it('preserves a recipe save application failure: ' + JSON.stringify(body), () => {
+      const payload = { modelType: 'Service' as 'Service', modelVersionId: 'uuid', operation: 'create', orchestrationFlow: 'flow' };
+      service.saveServiceRecipe(payload).subscribe((data) => expect(data).toEqual(body));
+      const req = http.expectOne(base + '/serviceRecipes');
+      expect(req.request.body).toEqual(payload);
+      req.flush(body);
+    });
+  });
+  [{ errMsg: 'Unable to process.' }, null].forEach((body) => {
+    it('preserves a workflow upload failure: ' + JSON.stringify(body), () => {
+      const form = new FormData();
+      form.append('file', new File(['archive'], 'workflow.war'));
+      service.onboardBPMNInfra(form).subscribe((data) => expect(data).toEqual(body));
+      const req = http.expectOne(base + '/workflowPackages/onboard');
+      expect(req.request.body).toBe(form);
+      expect(req.request.headers.has('Content-Type')).toBe(false);
+      req.flush(body);
+    });
   });
 });

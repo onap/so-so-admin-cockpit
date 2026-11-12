@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BpmnInfraRequest } from './model/bpmnInfraRequest.model';
 import { catchError } from 'rxjs/operators';
 import { Observable } from 'rxjs';
@@ -31,13 +31,19 @@ import { HttpResponse } from '@angular/common/http';
 import { ProcessInstanceDetail } from './model/processInstance.model';
 import { HttpErrorHandlerService } from './http-error-handler.service';
 import { ActivityInstance } from './model/activityInstance.model';
+import { ProcessDefinitionDetail } from './model/processDefinition.model';
+import { VariableInstance } from './model/variableInstance.model';
+import { RecipeRequest } from './model/recipeRequest.model';
+import {
+  ServiceRecipeResponse, NetworkRecipeResponse, VnfRecipeResponse,
+  RecipeSaveResponse, WorkflowOnboardResponse
+} from './model/api-response.model';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class DataService {
-  httpOptions:any;
   constructor(private http: HttpClient, private httpErrorHandlerService: HttpErrorHandlerService) { }
 
   // HTTP POST call to running Spring Boot application
@@ -78,76 +84,76 @@ export class DataService {
   }
 
   // HTTP GET to return Process Definition using processDefinitionId
-  getProcessDefinition(processDefinitionId: string): Observable<Object> {
+  getProcessDefinition(processDefinitionId: string): Observable<ProcessDefinitionDetail> {
     var url = environment.soMonitoringBackendURL + '/process-definition/' + processDefinitionId;
-    return this.http.get(url).pipe(
+    return this.http.get<ProcessDefinitionDetail>(url).pipe(
       catchError(this.httpErrorHandlerService.handleError("GET", url))
     );
   }
 
   // HTTP GET to return Variable Instance using ProcessInstanceID
-  getVariableInstance(processDefinitionId: string): Observable<Object> {
+  getVariableInstance(processDefinitionId: string): Observable<VariableInstance[]> {
     var url = environment.soMonitoringBackendURL + '/variable-instance/' + processDefinitionId;
-    return this.http.get(url).pipe(
+    return this.http.get<VariableInstance[]>(url).pipe(
       catchError(this.httpErrorHandlerService.handleError("GET", url))
     );
   }
 
-  onboardBPMNInfra(formData: any): Observable<Object> {
+  onboardBPMNInfra(formData: FormData): Observable<WorkflowOnboardResponse | null> {
     var url = environment.soMonitoringBackendURL + '/workflowPackages/onboard';
-    return this.http.post<any>(url, formData)
+    return this.http.post<WorkflowOnboardResponse | null>(url, formData)
       .pipe(
         catchError(this.httpErrorHandlerService.handleError("POST", url))
       );
   }
 
-  saveServiceRecipe(data: any): Observable<Object> {
-   this.httpOptions = {
+  saveServiceRecipe(data: RecipeRequest): Observable<RecipeSaveResponse | null> {
+   const httpOptions = {
       headers: new HttpHeaders({
         'Content-Type':  'application/json',
       })
     };
     var url = environment.soMonitoringBackendURL + '/serviceRecipes';
-    return this.http.post<any>(url, data, this.httpOptions)
+    return this.http.post<RecipeSaveResponse | null>(url, data, httpOptions)
       .pipe(
         catchError(this.httpErrorHandlerService.handleError("POST", url))
       );
   }
 
-  getServiceRecipe(): Observable<Object> {
-    this.httpOptions = {
+  getServiceRecipe(): Observable<ServiceRecipeResponse | null> {
+    const httpOptions = {
        headers: new HttpHeaders({
          'Content-Type':  'application/json',
        })
      };
      var url = environment.soMonitoringBackendURL + '/serviceRecipes';
-     return this.http.get<any>(url, this.httpOptions)
+     return this.http.get<ServiceRecipeResponse | null>(url, httpOptions)
        .pipe(
          catchError(this.httpErrorHandlerService.handleError("GET", url))
        );
    }
 
-   getNetworkRecipe(): Observable<Object> {
-    this.httpOptions = {
+   getNetworkRecipe(): Observable<NetworkRecipeResponse | null> {
+    const httpOptions = {
        headers: new HttpHeaders({
          'Content-Type':  'application/json',
        })
      };
      var url = environment.soMonitoringBackendURL + '/networkRecipes';
-     return this.http.get<any>(url, this.httpOptions)
+     return this.http.get<NetworkRecipeResponse | null>(url, httpOptions)
        .pipe(
          catchError(this.httpErrorHandlerService.handleError("GET", url))
        );
    }
 
-   getVnfRecipe(): Observable<Object> {
-    this.httpOptions = {
+   getVnfRecipe(): Observable<VnfRecipeResponse | null> {
+    const httpOptions = {
        headers: new HttpHeaders({
          'Content-Type':  'application/json',
        })
      };
      var url = environment.soMonitoringBackendURL + '/vnfRecipes';
-     return this.http.get<any>(url, this.httpOptions)
+     return this.http.get<VnfRecipeResponse | null>(url, httpOptions)
        .pipe(
          catchError(this.httpErrorHandlerService.handleError("GET", url))
        );
