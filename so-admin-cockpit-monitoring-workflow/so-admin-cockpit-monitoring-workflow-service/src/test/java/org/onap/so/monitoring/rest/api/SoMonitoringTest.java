@@ -101,13 +101,14 @@ public class SoMonitoringTest {
     }
 
     @Test
-    public void test_getServiceRecipesWithEmpty() throws IOException {
+    public void test_getServiceRecipesWithNull() throws IOException {
 
         doReturn(null).when(catalogDbClient).getServiceRecipes();
 
         final Response response = injectSoMoni.getServiceRecipes();
         JSONObject obj = new JSONObject(response.getEntity().toString());
-        assertEquals("Unable to process.", obj.getString("errMsg"));
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+        assertEquals("Unable to process recipe request.", obj.getString("errMsg"));
     }
 
     @Test
@@ -129,13 +130,14 @@ public class SoMonitoringTest {
     }
 
     @Test
-    public void test_getNetworkRecipesWithEmpty() throws IOException {
+    public void test_getNetworkRecipesWithNull() throws IOException {
 
         doReturn(null).when(catalogDbClient).getNetworkRecipes();
 
         final Response response = injectSoMoni.getNetworkRecipes();
         JSONObject obj = new JSONObject(response.getEntity().toString());
-        assertEquals("Unable to process.", obj.getString("errMsg"));
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+        assertEquals("Unable to process recipe request.", obj.getString("errMsg"));
     }
 
     @Test
@@ -156,13 +158,14 @@ public class SoMonitoringTest {
     }
 
     @Test
-    public void test_getVnfRecipesWithEmpty() throws IOException {
+    public void test_getVnfRecipesWithNull() throws IOException {
 
         doReturn(null).when(catalogDbClient).getVnfRecipes();
 
         final Response response = injectSoMoni.getVnfRecipes();
         JSONObject obj = new JSONObject(response.getEntity().toString());
-        assertEquals("Unable to process.", obj.getString("errMsg"));
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+        assertEquals("Unable to process recipe request.", obj.getString("errMsg"));
     }
 
     @Test

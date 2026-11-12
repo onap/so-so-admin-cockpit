@@ -19,6 +19,7 @@ SPDX-License-Identifier: Apache-2.0
 
 */
 
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   TestBed,
   ComponentFixture,
@@ -198,12 +199,21 @@ describe('Workflow onboarding', () => {
         expect(spinner.hide).toHaveBeenCalled();
       });
     });
-    it('reports a ' + label + ' list transport failure once with its status', () => {
-      api[method].and.returnValue(throwError({ status: 503 }));
-      component[method]();
-      expect(popup.error.calls.count()).toBe(1);
-      expect(popup.error.calls.mostRecent().args[0]).toContain('503');
-      expect(popup.error.calls.mostRecent().args[0]).toContain(label);
+    [502, 503, 504].forEach(status => {
+      it('reports a ' + label + ' list failure once with status ' + status, () => {
+        const serviceTable = component.serviceRecipe;
+        const networkTable = component.networkRecipe;
+        const vnfTable = component.vnfRecipe;
+        api[method].and.returnValue(throwError(new HttpErrorResponse({ status })));
+        component[method]();
+        expect(popup.error.calls.count()).toBe(1);
+        expect(popup.error.calls.mostRecent().args[0]).toContain(String(status));
+        expect(popup.error.calls.mostRecent().args[0]).toContain(label);
+        expect(spinner.hide).toHaveBeenCalled();
+        expect(component.serviceRecipe).toBe(serviceTable);
+        expect(component.networkRecipe).toBe(networkTable);
+        expect(component.vnfRecipe).toBe(vnfTable);
+      });
     });
   });
   it('reports an empty workflow upload response once', () => {

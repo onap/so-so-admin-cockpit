@@ -577,9 +577,7 @@ public class SoMonitoringController {
             return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(resp).build();
 
         } catch (Exception e) {
-            LOGGER.info("SoMonitoringController setServiceRecipes error: {}", e.getMessage());
-            return Response.status(200).header("Access-Control-Allow-Origin", "*")
-                    .entity("{\"errMsg\":\"Unable to process.\"}").build();
+            return CatalogDbErrorResponses.from("getServiceRecipes", e);
         }
     }
 
@@ -613,9 +611,7 @@ public class SoMonitoringController {
             return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(resp).build();
 
         } catch (Exception e) {
-            LOGGER.info("SoMonitoringController getNetworkRecipes error: {}", e.getMessage());
-            return Response.status(200).header("Access-Control-Allow-Origin", "*")
-                    .entity("{\"errMsg\":\"Unable to process.\"}").build();
+            return CatalogDbErrorResponses.from("getNetworkRecipes", e);
         }
     }
 
@@ -650,9 +646,7 @@ public class SoMonitoringController {
             return Response.status(200).header("Access-Control-Allow-Origin", "*").entity(resp).build();
 
         } catch (Exception e) {
-            LOGGER.info("SoMonitoringController getVnfRecipes error: {}", e.getMessage());
-            return Response.status(200).header("Access-Control-Allow-Origin", "*")
-                    .entity("{\"errMsg\":\"Unable to process.\"}").build();
+            return CatalogDbErrorResponses.from("getVnfRecipes", e);
         }
     }
 

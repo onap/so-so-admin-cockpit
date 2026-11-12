@@ -56,6 +56,8 @@ public class CatalogDbClientAuthTest {
 
     private static final String EMPTY_SERVICE_RECIPES = "{\"_embedded\":{\"serviceRecipe\":[]}}";
 
+    private static final java.util.concurrent.atomic.AtomicInteger catalogStatus = new java.util.concurrent.atomic.AtomicInteger(200);
+
     private static final AtomicReference<String> catalogGetAuthorization = new AtomicReference<>();
 
     private static final HttpServer catalogAdapter = startCatalogAdapter();
@@ -76,6 +78,7 @@ public class CatalogDbClientAuthTest {
 
     @BeforeEach
     public void setUp() {
+        catalogStatus.set(200);
         mockServer = MockRestServiceServer.bindTo(restTemplate).build();
     }
 
@@ -97,6 +100,19 @@ public class CatalogDbClientAuthTest {
         assertEquals(EXPECTED_AUTH, catalogGetAuthorization.get());
     }
 
+    @Autowired
+    private SoMonitoringController controller;
+
+    @Test
+    public void catalogUnauthorizedBecomesBadGateway() {
+        catalogStatus.set(401);
+        jakarta.ws.rs.core.Response response = controller.getServiceRecipes();
+        assertEquals(502, response.getStatus());
+        assertEquals("CATALOG_DB_UPSTREAM_ERROR",
+                new org.json.JSONObject(response.getEntity().toString()).getString("code"));
+        assertEquals(EXPECTED_AUTH, catalogGetAuthorization.get());
+    }
+
     @AfterAll
     public static void stopCatalogAdapter() {
         catalogAdapter.stop(0);
@@ -109,7 +125,7 @@ public class CatalogDbClientAuthTest {
                 catalogGetAuthorization.set(exchange.getRequestHeaders().getFirst(AUTHORIZATION_HEADER));
                 final byte[] body = EMPTY_SERVICE_RECIPES.getBytes(StandardCharsets.UTF_8);
                 exchange.getResponseHeaders().add("Content-Type", "application/hal+json");
-                exchange.sendResponseHeaders(200, body.length);
+                exchange.sendResponseHeaders(catalogStatus.get(), body.length);
                 try (OutputStream out = exchange.getResponseBody()) {
                     out.write(body);
                 }
