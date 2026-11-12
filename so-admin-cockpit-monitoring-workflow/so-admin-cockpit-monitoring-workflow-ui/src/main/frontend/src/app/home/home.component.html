@@ -48,26 +48,28 @@ SPDX-License-Identifier: Apache-2.0
         <input matInput #searchValueRI type="text" name="requestId" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.requestId" placeholder="Request Id">
       </mat-form-field>
 
-      <!-- Angular Start Date Picker -->
-      <mat-form-field class="startDate">
-        <input matInput #startDate [matDatepicker]="picker" name="startDate" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.startDate" placeholder="Choose a start date">
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
-      </mat-form-field>
+      <div class="date-time-fields">
+        <!-- Angular Start Date Picker -->
+        <mat-form-field class="startDate">
+          <input matInput #startDate [matDatepicker]="picker" name="startDate" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.startDate" placeholder="Choose a start date">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
 
-      <!-- Dropdown box for Start Hour selection -->
-      <mat-form-field class="selectHour">
-        <mat-select class="formatBox" aria-label="Start hour" panelClass="cockpit-search-options" [(value)]="searchData.selectedStartHour"  placeholder="Select Hour">
-          <mat-option *ngFor="let option of hourOptions" [value]="option">{{option}}</mat-option>
-        </mat-select>
-      </mat-form-field>
+        <!-- Dropdown box for Start Hour selection -->
+        <mat-form-field class="selectHour">
+          <mat-select class="formatBox" aria-label="Start hour" panelClass="cockpit-search-options" [(value)]="searchData.selectedStartHour"  placeholder="Select Hour">
+            <mat-option *ngFor="let option of hourOptions" [value]="option">{{option}}</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-      <!-- Dropdown box for Start Minute selection -->
-      <mat-form-field class="selectMinute">
-        <mat-select class="formatBox" aria-label="Start minute" panelClass="cockpit-search-options" [(value)]="searchData.selectedStartMinute" placeholder="Select Minute">
-          <mat-option *ngFor="let option of minuteOptions" [value]="option">{{option}}</mat-option>
-        </mat-select>
-      </mat-form-field>
+        <!-- Dropdown box for Start Minute selection -->
+        <mat-form-field class="selectMinute">
+          <mat-select class="formatBox" aria-label="Start minute" panelClass="cockpit-search-options" [(value)]="searchData.selectedStartMinute" placeholder="Select Minute">
+            <mat-option *ngFor="let option of minuteOptions" [value]="option">{{option}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
     </div>
 
     <!-- Dropdown Filter and TextBox for Service Name -->
@@ -81,26 +83,28 @@ SPDX-License-Identifier: Apache-2.0
         <input matInput #searchValueSN type="text" name="serviceInstanceName" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.serviceInstanceName" placeholder="Service Name">
       </mat-form-field>
 
-      <!-- Angular End Date Picker -->
-      <mat-form-field class="endDate">
-        <input matInput #endDate [matDatepicker]="endpicker" name="endDate" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.endDate" placeholder="Choose an end date">
-        <mat-datepicker-toggle matSuffix [for]="endpicker"></mat-datepicker-toggle>
-        <mat-datepicker #endpicker></mat-datepicker>
-      </mat-form-field>
+      <div class="date-time-fields">
+        <!-- Angular End Date Picker -->
+        <mat-form-field class="endDate">
+          <input matInput #endDate [matDatepicker]="endpicker" name="endDate" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.endDate" placeholder="Choose an end date">
+          <mat-datepicker-toggle matSuffix [for]="endpicker"></mat-datepicker-toggle>
+          <mat-datepicker #endpicker></mat-datepicker>
+        </mat-form-field>
 
-      <!-- Dropdown box for End Hour selection -->
-      <mat-form-field class="selectHour">
-        <mat-select class="formatBox" aria-label="End hour" panelClass="cockpit-search-options" [(value)]="searchData.selectedEndHour"  placeholder="Select Hour">
-          <mat-option *ngFor="let option of hourOptions" [value]="option">{{option}}</mat-option>
-        </mat-select>
-      </mat-form-field>
+        <!-- Dropdown box for End Hour selection -->
+        <mat-form-field class="selectHour">
+          <mat-select class="formatBox" aria-label="End hour" panelClass="cockpit-search-options" [(value)]="searchData.selectedEndHour"  placeholder="Select Hour">
+            <mat-option *ngFor="let option of hourOptions" [value]="option">{{option}}</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-      <!-- Dropdown box for End Minute selection -->
-      <mat-form-field class="selectMinute">
-        <mat-select class="formatBox" aria-label="End minute" panelClass="cockpit-search-options" [(value)]="searchData.selectedEndMinute"  placeholder="Select Minute">
-          <mat-option *ngFor="let option of minuteOptions" [value]="option">{{option}}</mat-option>
-        </mat-select>
-      </mat-form-field>
+        <!-- Dropdown box for End Minute selection -->
+        <mat-form-field class="selectMinute">
+          <mat-select class="formatBox" aria-label="End minute" panelClass="cockpit-search-options" [(value)]="searchData.selectedEndMinute"  placeholder="Select Minute">
+            <mat-option *ngFor="let option of minuteOptions" [value]="option">{{option}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
     </div>
 
     <!-- Dropdown Filter for Status -->
@@ -111,13 +115,11 @@ SPDX-License-Identifier: Apache-2.0
         </mat-select>
       </mat-form-field>
     </div>
-    <br />
 
     <!-- Button to call makeCall() function to commence search based on parameters -->
     <button type="submit" aria-label="Search" class="search-button"><i class="fa fa-search" aria-hidden="true"></i></button>
   </form>
 
-  <br />
 
   <!-- Table to display selected fields if data present -->
   <div class="example-container mat-elevation-z8">

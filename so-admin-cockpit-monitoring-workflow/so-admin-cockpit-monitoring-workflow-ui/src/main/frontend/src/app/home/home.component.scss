@@ -24,7 +24,8 @@ SPDX-License-Identifier: Apache-2.0
 .searchArea {
   background-color: white;
   padding: 10px;
-  min-height: 345px;
+  display: grid;
+  row-gap: 12px;
   box-shadow: 0 5px 5px -3px rgba(0,0,0,.2), 0 8px 10px 1px rgba(0,0,0,.14), 0 3px 14px 2px rgba(0,0,0,.12);
 }
 
@@ -32,13 +33,8 @@ SPDX-License-Identifier: Apache-2.0
   width: 120px;
 }
 
-.valueInput {
-  width: 400px;
-  margin-left: 30px;
-}
-
 .search-button {
-  float: left;
+  justify-self: start;
   width: 120px;
   padding: 10px;
   background: #2196F3;
@@ -50,30 +46,59 @@ SPDX-License-Identifier: Apache-2.0
   cursor: pointer;
 }
 
-form.example button:hover {
+.search-button:hover {
   background: #0b7dda;
 }
 
-form.example::after {
-  content: "";
-  clear: both;
-  display: table;
+.completeForm {
+  display: grid;
+  gap: 24px;
 }
 
-.formFields {
-  display: inline-flex;
+.container-home {
+  display: grid;
+  grid-template-columns: 120px minmax(180px, 400px) minmax(340px, 400px);
+  column-gap: 30px;
+  align-items: start;
 }
 
-.endDate,
-.startDate {
-  margin-left: 90px;
-  width: 140px;
+.valueInput {
+  width: 100%;
+  min-width: 0;
 }
 
-.selectHour,
-.selectMinute {
-  margin-left: 30px;
-  width: 100px;
+.date-time-fields {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 100px 100px;
+  gap: 20px;
+}
+
+.date-time-fields mat-form-field {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1250px) {
+  .container-home {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+  .date-time-fields {
+    grid-column: 2;
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 720px) {
+  .container-home {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .date-time-fields {
+    grid-column: 1;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .startDate, .endDate {
+    grid-column: 1 / -1;
+  }
 }
 
 #servStats {
