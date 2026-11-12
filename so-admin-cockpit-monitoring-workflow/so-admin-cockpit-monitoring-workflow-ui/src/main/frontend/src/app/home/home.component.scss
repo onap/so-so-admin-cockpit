@@ -19,18 +19,13 @@ SPDX-License-Identifier: Apache-2.0
 
 @authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com
 */
-@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+
 
 .searchArea {
   background-color: white;
   padding: 10px;
-  height: 345px;
+  min-height: 345px;
   box-shadow: 0 5px 5px -3px rgba(0,0,0,.2), 0 8px 10px 1px rgba(0,0,0,.14), 0 3px 14px 2px rgba(0,0,0,.12);
-}
-
-.mat-form-field-appearance-legacy .mat-form-field-wrapper {
-  padding-bottom: 1.25em;
-  font-family: 'Montserrat', sans-serif;
 }
 
 .selectFilter {
@@ -42,40 +37,7 @@ SPDX-License-Identifier: Apache-2.0
   margin-left: 30px;
 }
 
-.selectFilter.mat-select.ng-tns-c5-1.ng-star-inserted {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 17px;
-}
-
-.mat-form-field-flex .valueInput {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 17px;
-}
-
-.mat-primary .mat-option.mat-selected:not(.mat-option-disabled) {
-  color: #00285F;
-}
-
-.mat-option {
-  font-size: 17px;
-  line-height: 3em;
-  height: 3em;
-  font-family: 'Montserrat', sans-serif;
-}
-
-.mat-select-arrow {
-  color: #00285F;
-}
-
-.mat-form-field.mat-focused.mat-primary .mat-select-arrow {
-  color: #00285F;
-}
-
-.mat-form-field-appearance-legacy .mat-form-field-underline {
-  color: #00285F;
-}
-
-.fa {
+.search-button {
   float: left;
   width: 120px;
   padding: 10px;
@@ -127,4 +89,9 @@ form.example::after {
     text-align: left;
     border-bottom: 1px solid #ccc;
   }
+}
+
+button:focus, a:focus {
+  outline: 3px solid #00285f;
+  outline-offset: 2px;
 }

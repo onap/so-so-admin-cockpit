@@ -3,7 +3,7 @@ import { DataService } from '../data.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { HttpClient } from '@angular/common/http';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
-import { MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
+import { MatPaginator, MatSort, MatTableDataSource, MatTabChangeEvent } from '@angular/material';
 import { ServiceRecipe } from '../model/serviceRecipe.model';
 import { NetworkRecipe } from '../model/networkRecipe.model';
 import { VnfRecipe } from '../model/vnfRecipe.model';
@@ -37,51 +37,48 @@ export class OnboardComponent implements OnInit {
   @ViewChild(MatSort) sort: MatSort;
 
   ngOnInit() {
-    this.createFormControls();
     this.getServiceRecipe()
   }
 
-  createFormControls() {
-    let tabDiv = document.getElementsByClassName('mat-tab-label-container')
-    var bDiv = document.createElement("div");
-    bDiv.className = 'addRecipe';  
-    var node = document.createElement("button");
-    node.className = 'btn btn-primary';  
-    node.title = 'Click here to add recipes or update existing recipes in the SO-Catalog';
-    node.addEventListener("click", this.addRecipe.bind(this));
-    var textnode = document.createTextNode("Add Recipe");         
-    node.appendChild(textnode); 
-    bDiv.appendChild(node)                             
-    tabDiv[0].appendChild(bDiv);
+  changeTab(event: MatTabChangeEvent): void {
+    const tabs: RecipeTab[] = ['Service Recipe', 'Network Recipe', 'VNF Recipe'];
+    const selected = tabs[event.index];
+    if (!selected || selected === this.currentTab) { return; }
+    this.currentTab = selected;
+    this.reloadSelectedRecipes();
   }
 
-  changeTab(evt: any) {
-    if (evt.tab) {
-      this.currentTab = evt.tab.textLabel
-    }
+  private reloadSelectedRecipes(): void {
     if (this.currentTab === 'Network Recipe') {
-      this.getNetworkRecipe()
+      this.getNetworkRecipe();
     } else if (this.currentTab === 'VNF Recipe') {
-      this.getVnfRecipe()
+      this.getVnfRecipe();
     } else {
-      this.getServiceRecipe()
+      this.getServiceRecipe();
     }
-    
   }
 
-  addRecipe(evt: any) {
-    let isAdd = false;
-    if (evt.currentTarget) {
-      isAdd = true
-    }
-    let dialogData: RecipeDialogData;
+  addRecipe(): void {
     if (this.currentTab === 'Service Recipe') {
-      dialogData = { tab: this.currentTab, addNew: isAdd, fData: isAdd ? undefined : evt };
+      this.openRecipe({ tab: this.currentTab, addNew: true });
     } else if (this.currentTab === 'Network Recipe') {
-      dialogData = { tab: this.currentTab, addNew: isAdd, fData: isAdd ? undefined : evt };
+      this.openRecipe({ tab: this.currentTab, addNew: true });
     } else {
-      dialogData = { tab: this.currentTab, addNew: isAdd, fData: isAdd ? undefined : evt };
+      this.openRecipe({ tab: this.currentTab, addNew: true });
     }
+  }
+
+  editRecipe(recipe: ServiceRecipe | NetworkRecipe | VnfRecipe): void {
+    if (this.currentTab === 'Service Recipe' && 'serviceModelUUID' in recipe) {
+      this.openRecipe({ tab: this.currentTab, addNew: false, fData: recipe });
+    } else if (this.currentTab === 'Network Recipe' && 'modelName' in recipe) {
+      this.openRecipe({ tab: this.currentTab, addNew: false, fData: recipe });
+    } else if (this.currentTab === 'VNF Recipe' && 'nfRole' in recipe) {
+      this.openRecipe({ tab: this.currentTab, addNew: false, fData: recipe });
+    }
+  }
+
+  private openRecipe(dialogData: RecipeDialogData): void {
     const dialogRef = this.dialog.open<RecipeComponent, RecipeDialogData, RecipeDialogResult>(RecipeComponent, {
       height: '500px',
       width: '600px',
@@ -89,7 +86,7 @@ export class OnboardComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.saved) {
-        this.changeTab(this.currentTab);
+        this.reloadSelectedRecipes();
       }
     });
   }

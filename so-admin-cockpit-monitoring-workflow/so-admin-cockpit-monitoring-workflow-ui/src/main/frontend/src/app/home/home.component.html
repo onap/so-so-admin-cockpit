@@ -20,53 +20,51 @@ SPDX-License-Identifier: Apache-2.0
 @authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com, andrei.barcovschi@ericsson.com
 -->
 
-<base href="/">
 
 
-<link rel="stylesheet" ng-href="./home.component.scss">
 <div class="completeForm">
-  <div class="searchArea">
+  <form class="searchArea" (ngSubmit)="makeCall()" aria-label="Service instance search">
 
     <!-- Dropdown Filter and TextBox for Service Instance Id -->
     <div class="container-home">
       <mat-form-field class="selectFilter">
-        <mat-select class="formatBox" [(value)]="searchData.selectedValueSII" placeholder="Select Filter">
+        <mat-select class="formatBox" aria-label="Service instance ID filter" panelClass="cockpit-search-options" [(value)]="searchData.selectedValueSII" placeholder="Select Filter">
           <mat-option *ngFor="let option of options" [value]="option.value">{{option.name}}</mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field class="valueInput">
-        <input matInput #searchValueSII type="text" [(ngModel)]="searchData.serviceInstanceId" placeholder="Service Instance Id">
+        <input matInput #searchValueSII type="text" name="serviceInstanceId" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.serviceInstanceId" placeholder="Service Instance Id">
       </mat-form-field>
     </div>
 
     <!-- Dropdown Filter and TextBox for Request Id -->
     <div class="container-home">
       <mat-form-field class="selectFilter">
-        <mat-select class="formatBox" [(value)]="searchData.selectedValueRI" placeholder="Select Filter">
+        <mat-select class="formatBox" aria-label="Request ID filter" panelClass="cockpit-search-options" [(value)]="searchData.selectedValueRI" placeholder="Select Filter">
           <mat-option *ngFor="let option of options" [value]="option.value">{{option.name}}</mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field class="valueInput">
-        <input matInput #searchValueRI type="text" [(ngModel)]="searchData.requestId" placeholder="Request Id">
+        <input matInput #searchValueRI type="text" name="requestId" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.requestId" placeholder="Request Id">
       </mat-form-field>
 
       <!-- Angular Start Date Picker -->
       <mat-form-field class="startDate">
-        <input matInput #startDate [matDatepicker]="picker" [(ngModel)]="searchData.startDate" placeholder="Choose a start date">
+        <input matInput #startDate [matDatepicker]="picker" name="startDate" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.startDate" placeholder="Choose a start date">
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
 
       <!-- Dropdown box for Start Hour selection -->
       <mat-form-field class="selectHour">
-        <mat-select class="formatBox" [(value)]="searchData.selectedStartHour"  placeholder="Select Hour">
+        <mat-select class="formatBox" aria-label="Start hour" panelClass="cockpit-search-options" [(value)]="searchData.selectedStartHour"  placeholder="Select Hour">
           <mat-option *ngFor="let option of hourOptions" [value]="option">{{option}}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <!-- Dropdown box for Start Minute selection -->
       <mat-form-field class="selectMinute">
-        <mat-select class="formatBox" [(value)]="searchData.selectedStartMinute" placeholder="Select Minute">
+        <mat-select class="formatBox" aria-label="Start minute" panelClass="cockpit-search-options" [(value)]="searchData.selectedStartMinute" placeholder="Select Minute">
           <mat-option *ngFor="let option of minuteOptions" [value]="option">{{option}}</mat-option>
         </mat-select>
       </mat-form-field>
@@ -75,31 +73,31 @@ SPDX-License-Identifier: Apache-2.0
     <!-- Dropdown Filter and TextBox for Service Name -->
     <div class="container-home">
       <mat-form-field class="selectFilter">
-        <mat-select class="formatBox" [(value)]="searchData.selectedValueSN" placeholder="Select Filter">
+        <mat-select class="formatBox" aria-label="Service name filter" panelClass="cockpit-search-options" [(value)]="searchData.selectedValueSN" placeholder="Select Filter">
           <mat-option *ngFor="let option of options" [value]="option.value">{{option.name}}</mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field class="valueInput">
-        <input matInput #searchValueSN type="text" [(ngModel)]="searchData.serviceInstanceName" placeholder="Service Name">
+        <input matInput #searchValueSN type="text" name="serviceInstanceName" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.serviceInstanceName" placeholder="Service Name">
       </mat-form-field>
 
       <!-- Angular End Date Picker -->
       <mat-form-field class="endDate">
-        <input matInput #endDate [matDatepicker]="endpicker" [(ngModel)]="searchData.endDate" placeholder="Choose an end date">
+        <input matInput #endDate [matDatepicker]="endpicker" name="endDate" [ngModelOptions]="{standalone: true}" [(ngModel)]="searchData.endDate" placeholder="Choose an end date">
         <mat-datepicker-toggle matSuffix [for]="endpicker"></mat-datepicker-toggle>
         <mat-datepicker #endpicker></mat-datepicker>
       </mat-form-field>
 
       <!-- Dropdown box for End Hour selection -->
       <mat-form-field class="selectHour">
-        <mat-select class="formatBox" [(value)]="searchData.selectedEndHour"  placeholder="Select Hour">
+        <mat-select class="formatBox" aria-label="End hour" panelClass="cockpit-search-options" [(value)]="searchData.selectedEndHour"  placeholder="Select Hour">
           <mat-option *ngFor="let option of hourOptions" [value]="option">{{option}}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <!-- Dropdown box for End Minute selection -->
       <mat-form-field class="selectMinute">
-        <mat-select class="formatBox" [(value)]="searchData.selectedEndMinute"  placeholder="Select Minute">
+        <mat-select class="formatBox" aria-label="End minute" panelClass="cockpit-search-options" [(value)]="searchData.selectedEndMinute"  placeholder="Select Minute">
           <mat-option *ngFor="let option of minuteOptions" [value]="option">{{option}}</mat-option>
         </mat-select>
       </mat-form-field>
@@ -116,8 +114,8 @@ SPDX-License-Identifier: Apache-2.0
     <br />
 
     <!-- Button to call makeCall() function to commence search based on parameters -->
-    <button aria-label="Search" (click)="makeCall()" class="fa fa-search"></button>
-  </div>
+    <button type="submit" aria-label="Search" class="search-button"><i class="fa fa-search" aria-hidden="true"></i></button>
+  </form>
 
   <br />
 

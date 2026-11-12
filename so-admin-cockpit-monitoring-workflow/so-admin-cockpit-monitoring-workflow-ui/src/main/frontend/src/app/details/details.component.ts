@@ -20,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 @authors: ronan.kenny@est.tech, waqas.ikram@est.tech
 */
 
-import { Component, AfterViewInit, OnDestroy, ElementRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { Subject, Observable, EMPTY, of, merge, forkJoin, asapScheduler } from 'rxjs';
 import { map, distinctUntilChanged, observeOn, tap, switchMap, catchError, finalize, takeUntil } from 'rxjs/operators';
 import { DataService } from '../data.service';
@@ -36,8 +36,7 @@ import { BpmnViewerService, BpmnViewerAdapter } from './bpmn-viewer.service';
 @Component({
   selector: 'app-details',
   templateUrl: './details.component.html',
-  styleUrls: ['./details.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  styleUrls: ['./details.component.scss']
 })
 export class DetailsComponent implements AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -127,7 +126,7 @@ export class DetailsComponent implements AfterViewInit, OnDestroy {
           if (activity.calledProcessInstanceId && activity.calledProcessInstanceId.trim()) {
             viewer.addDrilldown(activity.activityId, activity.calledProcessInstanceId, id => {
               if (load === this.activeLoad) { this.router.navigate(['/details/' + id]); }
-            });
+            }, activity.activityName);
           }
           viewer.get('canvas').addMarker(activity.activityId, 'highlight');
         });

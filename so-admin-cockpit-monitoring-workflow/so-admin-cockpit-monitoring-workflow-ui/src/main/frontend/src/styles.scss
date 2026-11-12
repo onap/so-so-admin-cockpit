@@ -28,14 +28,6 @@ body {
   font-family: 'Montserrat', sans-serif;
   height: 100vh;
 }
-.addRecipe {
-  button {
-    height: 15px !important;
-    cursor: pointer !important;
-    height: 36px !important;
-    margin: 5px 10px !important;
-  }
-}
 #container {
   display: grid;
   grid-template-columns: 70px auto;
@@ -76,5 +68,39 @@ body {
         }
       }
     }
+  }
+}
+
+// Material and bpmn-js create descendants outside component template encapsulation.
+app-home {
+  .mat-form-field-wrapper, .mat-select-value {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 17px;
+  }
+  .mat-select-arrow, .mat-form-field.mat-focused .mat-select-arrow {
+    color: #00285f;
+  }
+}
+.cockpit-search-options .mat-option {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 17px;
+}
+app-details {
+  .highlight:not(.djs-connection) .djs-visual > :nth-child(1) {
+    fill: cyan !important;
+  }
+  .highlight-overlay {
+    display: block;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+  .highlight-overlay:hover {
+    background: rgba(0, 40, 95, .12);
+  }
+  .highlight-overlay:focus {
+    outline: 3px solid #00285f;
+    outline-offset: 2px;
   }
 }

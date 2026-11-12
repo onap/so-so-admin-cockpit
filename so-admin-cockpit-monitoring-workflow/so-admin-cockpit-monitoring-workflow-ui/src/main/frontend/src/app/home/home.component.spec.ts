@@ -73,6 +73,7 @@ describe('Search workflow', () => {
     fixture.detectChanges();
   }
   it('submits an entered request criterion and renders returned rows', fakeAsync(() => {
+    tick(); fixture.detectChanges();
     const input = fixture.nativeElement.querySelector(
       'input[placeholder="Request Id"]'
     );
@@ -80,7 +81,7 @@ describe('Search workflow', () => {
     input.dispatchEvent(new Event('input'));
     tick();
     api.getBpmnInfraRequest.and.returnValue(of([request]));
-    fixture.nativeElement.querySelector('button.fa-search').click();
+    fixture.nativeElement.querySelector('button[aria-label="Search"]').click();
     tick();
     fixture.detectChanges();
     expect(api.getBpmnInfraRequest.calls.mostRecent().args[0]).toEqual({
@@ -88,6 +89,19 @@ describe('Search workflow', () => {
     });
     expect(fixture.nativeElement.textContent).toContain('Demo service');
     expect(spinner.hide).toHaveBeenCalled();
+  }));
+  it('submits the native search form and keeps its icon decorative', fakeAsync(() => {
+    tick(); fixture.detectChanges();
+    const form = fixture.nativeElement.querySelector('form[aria-label="Service instance search"]');
+    expect(form).not.toBeNull();
+    const button = fixture.nativeElement.querySelector('button[aria-label="Search"]');
+    expect(button.type).toBe('submit');
+    expect(button.querySelector('i').getAttribute('aria-hidden')).toBe('true');
+    api.getBpmnInfraRequest.and.returnValue(of([request]));
+    if (form) { form.dispatchEvent(new Event('submit')); }
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Demo service');
+    expect(api.getBpmnInfraRequest.calls.count()).toBe(1);
   }));
   it('counts each status and rounds percentages with unknown statuses in the denominator', () => {
     search(

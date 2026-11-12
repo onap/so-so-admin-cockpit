@@ -99,6 +99,21 @@ import {
       fixture.nativeElement.querySelector('button[type="submit"]').click();
       fixture.detectChanges();
     }
+    it('labels every recipe input and describes required errors after submit', () => {
+      submit();
+      Array.prototype.forEach.call(fixture.nativeElement.querySelectorAll('input'), input => {
+        const label = fixture.nativeElement.querySelector('label[for="' + input.id + '"]');
+        expect(label).not.toBeNull();
+        expect(label.control).toBe(input);
+        if (input.required) {
+          expect(input.getAttribute('aria-invalid')).toBe('true');
+          const error = fixture.nativeElement.querySelector('#' + input.getAttribute('aria-describedby'));
+          expect(error).not.toBeNull();
+          if (error) { expect(error.textContent).toContain('required'); }
+        }
+      });
+      expect(fixture.nativeElement.querySelector('[aria-live="polite"]')).not.toBeNull();
+    });
     it('rejects an empty required form', () => {
       submit();
       expect(api.saveServiceRecipe).not.toHaveBeenCalled();

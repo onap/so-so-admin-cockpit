@@ -40,7 +40,9 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .zoomButton {
-  padding-top: 8px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
   background: none;
   border: none;
 }
@@ -78,11 +80,11 @@ SPDX-License-Identifier: Apache-2.0
   flex: 0 0 52%;
 }
 
-.highlight:not(.djs-connection) .djs-visual > :nth-child(1) {
-  fill: cyan !important;
-  /* color elements as green */
-}
-
 .tab-group {
   word-break: break-all;
+}
+
+button:focus, a:focus {
+  outline: 3px solid #00285f;
+  outline-offset: 2px;
 }

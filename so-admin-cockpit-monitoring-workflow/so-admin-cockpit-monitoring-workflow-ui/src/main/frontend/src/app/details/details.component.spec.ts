@@ -125,6 +125,25 @@ describe('Process inspection', () => {
     viewer.overlay.click();
     expect(router.navigate).toHaveBeenCalledWith(['/details/child-1']);
   }));
+  it('names zoom controls and hides decorative icon text', fakeAsync(() => {
+    start();
+    const buttons = fixture.nativeElement.querySelectorAll('button.zoomButton');
+    expect(Array.prototype.map.call(buttons, button => button.getAttribute('aria-label')))
+      .toEqual(['Zoom in', 'Zoom out', 'Reset zoom']);
+    Array.prototype.forEach.call(buttons, button => {
+      expect(button.querySelector('mat-icon').getAttribute('aria-hidden')).toBe('true');
+    });
+  }));
+  it('provides a named table link for drilldown and plain text for empty process IDs', fakeAsync(() => {
+    api.getActivityInstance.and.returnValue(of([
+      activity, Object.assign({}, activity, { activityId: 'Task_2', activityName: 'No child', calledProcessInstanceId: '   ' })
+    ]));
+    start();
+    const links = fixture.nativeElement.querySelectorAll('mat-cell a');
+    expect(links.length).toBe(1);
+    expect(links[0].getAttribute('aria-label')).toBe('Deploy');
+    expect(fixture.nativeElement.textContent).toContain('No child');
+  }));
   it('supports zoom and reset controls', fakeAsync(() => {
     start();
     component.zoomIn();

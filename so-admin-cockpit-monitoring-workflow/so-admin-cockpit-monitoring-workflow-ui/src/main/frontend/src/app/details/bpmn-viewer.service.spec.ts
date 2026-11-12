@@ -69,6 +69,21 @@ describe('BPMN viewer adapter', () => {
       });
     });
   });
+  it('creates a focusable named native drilldown button', done => {
+    const adapter = create();
+    adapter.importXML(xml, error => {
+      expect(error).toBeFalsy();
+      adapter.addDrilldown('Task_1', 'child-1', () => {});
+      const overlay = hosts[0].querySelector('.highlight-overlay') as HTMLElement;
+      expect(overlay.tagName).toBe('BUTTON');
+      expect(overlay.getAttribute('type')).toBe('button');
+      expect(overlay.getAttribute('aria-label')).toContain('Task_1');
+      expect(overlay.getAttribute('aria-label')).toContain('child-1');
+      overlay.focus();
+      expect(document.activeElement).toBe(overlay);
+      done();
+    });
+  });
   it('skips missing elements and empty called-process IDs', done => {
     const adapter = create();
     adapter.importXML(xml, error => {

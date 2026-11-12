@@ -1,6 +1,4 @@
 
-<base href="/">
-<link rel="stylesheet" ng-href="./onboard.component.scss">
 <div class="completeForm">
    <div>
      <h3>Dynamic Deployment of workflow</h3>
@@ -8,23 +6,27 @@
   <div class="uploadwar onboard-box" style="padding: 25px;">
     <label for="recipe-war">
       Recipe war:
-      <span style="font-weight: bold;cursor: pointer;margin-left: 5px;" title="bpmn, groovy and java files">
-        ?
-      </span>
+
     </label>
     <br>
-    <input id="recipe-war" class="" type="file" class="upload-box form-control pad-top-not5"
+    <input id="recipe-war" type="file" class="upload-box form-control pad-top-not5"
+      aria-describedby="recipe-war-help"
       (change)="beforeUpload($event)"
       placeholder="Upload-BPMN-war" required>
+      <small id="recipe-war-help">Select a WAR archive containing BPMN, Groovy and Java files.</small>
       <br>
-    <button (click)="onSubmit()" class="btn btn-primary">
+    <button type="button" (click)="onSubmit()" class="btn btn-primary">
       Upload Recipe
     </button>
   </div>
   <br />
   <!-- Table to display selected fields if data present -->
   <div class="example-container mat-elevation-z8">
-    <mat-tab-group class="tab-group" (focusChange)="changeTab($event)">
+    <div class="recipe-toolbar">
+      <button type="button" class="btn btn-primary" (click)="addRecipe()"
+        title="Add a recipe to the SO Catalog">Add Recipe</button>
+    </div>
+    <mat-tab-group class="tab-group" (selectedTabChange)="changeTab($event)">
       <mat-tab label="Service Recipe">
         <mat-table [dataSource]="serviceRecipe" matSort>
           <ng-container matColumnDef="serviceModelUUID">
@@ -62,7 +64,7 @@
           <ng-container matColumnDef="operation">
             <mat-header-cell *matHeaderCellDef>Operation</mat-header-cell>
             <mat-cell *matCellDef="let recipe">
-              <button class="btn btn-primary" (click)="addRecipe(recipe)">Modify</button>
+              <button class="btn btn-primary" (click)="editRecipe(recipe)">Modify</button>
             </mat-cell>
           </ng-container>
           <mat-header-row *matHeaderRowDef="displayedServiceColumns"></mat-header-row>
@@ -112,7 +114,7 @@
           <ng-container matColumnDef="operation">
             <mat-header-cell *matHeaderCellDef>Operation</mat-header-cell>
             <mat-cell *matCellDef="let recipe">
-              <button  class="btn btn-primary" (click)="addRecipe(recipe)">Modify</button>
+              <button  class="btn btn-primary" (click)="editRecipe(recipe)">Modify</button>
             </mat-cell>
           </ng-container>
           <mat-header-row *matHeaderRowDef="displayedNetworkColumns"></mat-header-row>
@@ -166,7 +168,7 @@
           <ng-container matColumnDef="operation">
             <mat-header-cell *matHeaderCellDef>Operation</mat-header-cell>
             <mat-cell *matCellDef="let recipe">
-              <button class="btn btn-primary" (click)="addRecipe(recipe)">Modify</button>
+              <button class="btn btn-primary" (click)="editRecipe(recipe)">Modify</button>
             </mat-cell>
           </ng-container>
           <mat-header-row *matHeaderRowDef="displayedVnfColumns"></mat-header-row>

@@ -20,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 @authors: ronan.kenny@ericsson.com, waqas.ikram@ericsson.com, andrei.barcovschi@ericsson.com
 */
 
-import { Component, OnDestroy, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { DataService } from '../data.service';
 import { ActivatedRoute, Router } from "@angular/router";
 import { BpmnInfraRequest } from '../model/bpmnInfraRequest.model';
@@ -40,8 +40,7 @@ import { map, switchMap, catchError, finalize, takeUntil } from 'rxjs/operators'
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  styleUrls: ['./home.component.scss']
 })
 
 export class HomeComponent implements OnDestroy {

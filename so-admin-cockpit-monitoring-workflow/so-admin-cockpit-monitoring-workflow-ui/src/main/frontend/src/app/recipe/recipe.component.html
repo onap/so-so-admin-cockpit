@@ -16,7 +16,11 @@
                     class="form-control"
                     id="recipe-modelName"
                     formControlName="modelName"
+                    [attr.aria-invalid]="modelName.invalid && modelName.touched"
+                    aria-describedby="recipe-modelName-error"
                     required>
+                <small id="recipe-modelName-error" class="field-error"
+                    [style.visibility]="modelName.invalid && modelName.touched ? 'visible' : 'hidden'">Model name is required.</small>
             </div>
             <div class="form-group"
                 *ngIf="modeType == 'VNF Recipe'"
@@ -40,7 +44,11 @@
                         class="form-control"
                         id="recipe-modelVersionId"
                     formControlName="modelVersionId"
+                    [attr.aria-invalid]="modelVersionId.invalid && modelVersionId.touched"
+                    aria-describedby="recipe-modelVersionId-error"
                         required>
+                <small id="recipe-modelVersionId-error" class="field-error"
+                    [style.visibility]="modelVersionId.invalid && modelVersionId.touched ? 'visible' : 'hidden'">Model version ID is required.</small>
             </div>
             <div class="form-group"
                 [ngClass]="{
@@ -52,7 +60,11 @@
                     class="form-control"
                     id="recipe-operation"
                     formControlName="operation"
+                    [attr.aria-invalid]="operation.invalid && operation.touched"
+                    aria-describedby="recipe-operation-error"
                     required>
+                <small id="recipe-operation-error" class="field-error"
+                    [style.visibility]="operation.invalid && operation.touched ? 'visible' : 'hidden'">Action is required.</small>
             </div>
             <div class="form-group"
                 [ngClass]="{
@@ -64,7 +76,11 @@
                     class="form-control"
                     id="recipe-orchestrationFlow"
                     formControlName="orchestrationFlow"
+                    [attr.aria-invalid]="orchestrationFlow.invalid && orchestrationFlow.touched"
+                    aria-describedby="recipe-orchestrationFlow-error"
                     required>
+                <small id="recipe-orchestrationFlow-error" class="field-error"
+                    [style.visibility]="orchestrationFlow.invalid && orchestrationFlow.touched ? 'visible' : 'hidden'">Orchestration URI is required.</small>
             </div>
             <div class="form-group"
                 *ngIf="modeType == 'Service Recipe'"
@@ -77,8 +93,13 @@
                     class="form-control"
                     id="recipe-recipeTimeout"
                     formControlName="recipeTimeout"
-                    aria-describedby="recipe-timeout-help">
+                    [attr.aria-invalid]="recipeTimeout.invalid && recipeTimeout.touched"
+                    aria-describedby="recipe-timeout-help recipe-timeout-error">
                 <small id="recipe-timeout-help">The server currently stores a timeout of 180 seconds.</small>
+            </div>
+            <div aria-live="polite" class="validation-feedback">
+                <p *ngIf="myform.invalid && (modelVersionId.touched || operation.touched || orchestrationFlow.touched)">Correct the highlighted fields before submitting.</p>
+                <p id="recipe-timeout-error" *ngIf="recipeTimeout.invalid && recipeTimeout.touched">Recipe timeout must contain digits only.</p>
             </div>
             <p *ngIf="saveError" role="alert">{{saveError}}</p>
             <button type="button" style="margin-right: 10px;"

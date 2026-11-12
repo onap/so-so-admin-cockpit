@@ -35,8 +35,6 @@ import { ToastrNotificationService } from './toastr-notification-service.service
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatTabsModule, MatSelectModule, MatNativeDateModule, MatDatepickerModule, MatCardModule, MatPaginatorModule, MatSortModule, MatIconModule } from '@angular/material';
 import { NgxSpinnerModule } from 'ngx-spinner';
-import { RouterModule, Routes } from '@angular/router';
-import { APP_BASE_HREF } from '@angular/common';
 import { OnboardComponent } from './onboard/onboard.component';
 import { RecipeComponent } from './recipe/recipe.component'
 
@@ -66,11 +64,9 @@ import { RecipeComponent } from './recipe/recipe.component'
     MatNativeDateModule,
     MatCardModule,
     NgxSpinnerModule,
-    RouterModule,
     MatPaginatorModule,
     MatSortModule,
     MatIconModule,
-    RouterModule.forRoot([]),
     ReactiveFormsModule
   ],
   entryComponents: [RecipeComponent],

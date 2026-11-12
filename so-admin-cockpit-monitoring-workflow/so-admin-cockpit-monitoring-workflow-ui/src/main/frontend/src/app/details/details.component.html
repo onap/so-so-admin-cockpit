@@ -23,14 +23,14 @@ SPDX-License-Identifier: Apache-2.0
 <div class="completeForm">
   <div class="topCanvas">
     <div class="navigation">
-      <button class="zoomButton" mat-icon-button title="zoom in" (click)="zoomIn()">
-        <mat-icon>zoom_in</mat-icon>
+      <button class="zoomButton" type="button" mat-icon-button aria-label="Zoom in" title="Zoom in" (click)="zoomIn()">
+        <mat-icon aria-hidden="true" fontSet="fa" fontIcon="fa-search-plus"></mat-icon>
       </button>
-      <button class="zoomButton" mat-icon-button title="zoom out" (click)="zoomOut()">
-        <mat-icon>zoom_out</mat-icon>
+      <button class="zoomButton" type="button" mat-icon-button aria-label="Zoom out" title="Zoom out" (click)="zoomOut()">
+        <mat-icon aria-hidden="true" fontSet="fa" fontIcon="fa-search-minus"></mat-icon>
       </button>
-      <button class="zoomButton" mat-icon-button title="reset zoom" (click)="resetZoom()">
-        <mat-icon>all_out</mat-icon>
+      <button class="zoomButton" type="button" mat-icon-button aria-label="Reset zoom" title="Reset zoom" (click)="resetZoom()">
+        <mat-icon aria-hidden="true" fontSet="fa" fontIcon="fa-expand"></mat-icon>
       </button>
     </div>
     <div #canvas class="canvas" id="canvas"></div>
@@ -60,10 +60,13 @@ SPDX-License-Identifier: Apache-2.0
           <ng-container matColumnDef="activityName">
             <mat-header-cell *matHeaderCellDef> Activity Name </mat-header-cell>
             <mat-cell *matCellDef="let activity">
-              <div [ngSwitch]="!!activity.calledProcessInstanceId">
-                <div *ngSwitchCase="false"><a> {{ activity.activityName }} </a></div>
-                <div *ngSwitchCase="true"><a [routerLink]="['/details', activity.calledProcessInstanceId]"> {{ activity.activityName }} </a></div>
-              </div>
+              <a *ngIf="activity.calledProcessInstanceId && activity.calledProcessInstanceId.trim(); else noCalledProcess"
+                [routerLink]="['/details', activity.calledProcessInstanceId]"
+                [attr.aria-label]="activity.activityName || activity.activityId"
+                [title]="'Open process ' + activity.calledProcessInstanceId + ' for ' + (activity.activityName || activity.activityId)">
+                {{ activity.activityName || activity.activityId }}
+              </a>
+              <ng-template #noCalledProcess>{{ activity.activityName || activity.activityId }}</ng-template>
             </mat-cell>
           </ng-container>
           <ng-container matColumnDef="activityType">

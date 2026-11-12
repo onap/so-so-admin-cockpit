@@ -30,6 +30,7 @@ import { DataService } from '../data.service';
 import { ToastrNotificationService } from '../toastr-notification-service.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MatDialog } from '@angular/material';
+import { serviceRecipe, networkRecipe, vnfRecipe } from '../testing/api-fixtures';
 import { of, throwError } from 'rxjs';
 import {
   componentImports,
@@ -105,11 +106,10 @@ describe('Workflow onboarding', () => {
   it('refreshes the active list after saving the recipe dialog', () => {
     dialog.open.and.returnValue({ afterClosed: () => of({ saved: true }) });
     component.currentTab = 'Network Recipe';
-    component.addRecipe({ currentTarget: {} });
+    component.addRecipe();
     expect(dialog.open.calls.mostRecent().args[1].data).toEqual({
       tab: 'Network Recipe',
       addNew: true,
-      fData: undefined
     });
     expect(api.getNetworkRecipe).toHaveBeenCalled();
   });
@@ -117,7 +117,7 @@ describe('Workflow onboarding', () => {
     it('retains the selected list after closing without a save: ' + JSON.stringify(result), () => {
       dialog.open.and.returnValue({ afterClosed: () => of(result) });
       component.currentTab = 'Network Recipe';
-      component.addRecipe({ currentTarget: {} });
+      component.addRecipe();
       expect(api.getNetworkRecipe).not.toHaveBeenCalled();
       expect(api.getServiceRecipe.calls.count()).toBe(1);
       expect(api.getVnfRecipe).not.toHaveBeenCalled();
@@ -127,7 +127,7 @@ describe('Workflow onboarding', () => {
     it('reloads only the selected ' + tab + ' after a confirmed save', () => {
       dialog.open.and.returnValue({ afterClosed: () => of({ saved: true }) });
       component.currentTab = tab;
-      component.addRecipe({ currentTarget: {} });
+      component.addRecipe();
       expect(api.getServiceRecipe.calls.count()).toBe(tab === 'Service Recipe' ? 2 : 1);
       expect(api.getNetworkRecipe.calls.count()).toBe(tab === 'Network Recipe' ? 1 : 0);
       expect(api.getVnfRecipe.calls.count()).toBe(tab === 'VNF Recipe' ? 1 : 0);
@@ -228,10 +228,73 @@ describe('Workflow onboarding', () => {
   ['Service Recipe', 'VNF Recipe'].forEach((tab: any) => {
     it('opens a typed empty dialog for ' + tab, () => {
       component.currentTab = tab;
-      component.addRecipe({ currentTarget: {} });
+      component.addRecipe();
       expect(dialog.open.calls.mostRecent().args[1].data).toEqual({
-        tab, addNew: true, fData: undefined
+        tab, addNew: true
       });
     });
   });
+  it('owns its Add button in an Angular toolbar outside the tab headers', () => {
+    const add = fixture.nativeElement.querySelector('.recipe-toolbar button');
+    expect(add).not.toBeNull();
+    if (add) {
+      add.click();
+      expect(dialog.open.calls.mostRecent().args[1].data).toEqual({ tab: 'Service Recipe', addNew: true });
+    }
+  });
+  it('does not load a tab when keyboard focus alone moves to its header', fakeAsync(() => {
+    const tabs = fixture.nativeElement.querySelectorAll('[role="tab"]');
+    tabs[0].focus();
+    const right = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true });
+    Object.defineProperty(right, 'keyCode', { value: 39 });
+    tabs[0].dispatchEvent(right);
+    tick(); fixture.detectChanges();
+    expect(component.currentTab).toBe('Service Recipe');
+    expect(api.getServiceRecipe.calls.count()).toBe(1);
+    expect(api.getNetworkRecipe).not.toHaveBeenCalled();
+    expect(api.getVnfRecipe).not.toHaveBeenCalled();
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    Object.defineProperty(enter, 'keyCode', { value: 13 });
+    tabs[1].dispatchEvent(enter);
+    fixture.detectChanges(); tick(500); fixture.detectChanges();
+    expect(component.currentTab).toBe('Network Recipe');
+    expect(api.getNetworkRecipe.calls.count()).toBe(1);
+    tabs[1].click(); fixture.detectChanges(); tick(500); fixture.detectChanges();
+    expect(api.getNetworkRecipe.calls.count()).toBe(1);
+  }));
+  [
+    { tab: 'Service Recipe', recipe: serviceRecipe, index: 0 },
+    { tab: 'Network Recipe', recipe: networkRecipe, index: 1 },
+    { tab: 'VNF Recipe', recipe: vnfRecipe, index: 2 }
+  ].forEach(testCase => {
+    it('opens the selected ' + testCase.tab + ' row for Modify and a blank Add dialog', async () => {
+      api.getServiceRecipe.and.returnValue(of({ serviceRecipes: [serviceRecipe] }));
+      api.getNetworkRecipe.and.returnValue(of({ networkRecipes: [networkRecipe] }));
+      api.getVnfRecipe.and.returnValue(of({ vnfRecipes: [vnfRecipe] }));
+      component.getServiceRecipe(); fixture.detectChanges();
+      fixture.nativeElement.querySelectorAll('[role="tab"]')[testCase.index].click();
+      fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+      await fixture.whenStable(); fixture.detectChanges();
+      const modify = Array.prototype.find.call(fixture.nativeElement.querySelectorAll('button'),
+        button => button.textContent.trim() === 'Modify');
+      modify.click();
+      expect(dialog.open.calls.mostRecent().args[1].data).toEqual({
+        tab: testCase.tab, addNew: false, fData: testCase.recipe
+      });
+      const add = fixture.nativeElement.querySelector('.recipe-toolbar button');
+      expect(add).not.toBeNull();
+      if (add) {
+        add.click();
+        expect(dialog.open.calls.mostRecent().args[1].data).toEqual({ tab: testCase.tab, addNew: true });
+      }
+    });
+  });
+  it('associates the upload label and help with the file control', () => {
+    const label = fixture.nativeElement.querySelector('label[for="recipe-war"]');
+    const control = fixture.nativeElement.querySelector('#recipe-war');
+    expect(label.control).toBe(control);
+    expect(control.getAttribute('aria-describedby')).toBe('recipe-war-help');
+    expect(fixture.nativeElement.querySelector('#recipe-war-help').textContent).toContain('WAR');
+  });
+
 });

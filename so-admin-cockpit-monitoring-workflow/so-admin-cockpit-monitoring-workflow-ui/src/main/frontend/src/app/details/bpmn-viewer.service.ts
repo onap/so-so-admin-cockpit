@@ -44,7 +44,7 @@ interface ViewerHandle {
   destroy(): void;
 }
 export interface BpmnViewerAdapter extends ViewerHandle {
-  addDrilldown(activityId: string, processId: string, navigate: (id: string) => void): void;
+  addDrilldown(activityId: string, processId: string, navigate: (id: string) => void, activityName?: string): void;
 }
 
 class ManagedViewer implements BpmnViewerAdapter {
@@ -60,12 +60,14 @@ class ManagedViewer implements BpmnViewerAdapter {
     // The installed viewer exposes dynamically named services.
     return this.viewer.get(name as 'canvas');
   }
-  addDrilldown(activityId: string, processId: string, navigate: (id: string) => void) {
+  addDrilldown(activityId: string, processId: string, navigate: (id: string) => void, activityName?: string) {
     const element = this.get('elementRegistry').get(activityId);
     if (!element || !processId || !processId.trim()) { return; }
-    const node = document.createElement('div');
+    const node = document.createElement('button');
     node.className = 'highlight-overlay';
-    node.id = element.id;
+    node.type = 'button';
+    node.setAttribute('aria-label', 'Open process ' + processId + ' for ' + (activityName || activityId));
+    node.title = node.getAttribute('aria-label');
     node.style.width = element.width + 'px';
     node.style.height = element.height + 'px';
     node.style.cursor = 'pointer';
