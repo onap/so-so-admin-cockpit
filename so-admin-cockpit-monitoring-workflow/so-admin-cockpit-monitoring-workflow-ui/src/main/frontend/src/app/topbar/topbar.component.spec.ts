@@ -23,7 +23,6 @@ SPDX-License-Identifier: Apache-2.0
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TopbarComponent } from './topbar.component';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 describe('TopbarComponent', () => {
   let component: TopbarComponent;
@@ -31,10 +30,7 @@ describe('TopbarComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [TopbarComponent],
-      schemas: [
-        CUSTOM_ELEMENTS_SCHEMA
-      ]
+      declarations: [TopbarComponent]
     })
       .compileComponents();
   }));

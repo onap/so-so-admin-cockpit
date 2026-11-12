@@ -13,6 +13,13 @@ module.exports = function (config) {
       require('karma-coverage-istanbul-reporter'),
       require('@angular-devkit/build-angular/plugins/karma')
     ],
+    // Keep the CI command unchanged; only isolated runners opt out of the sandbox.
+    customLaunchers: process.env.KARMA_NO_SANDBOX === 'true' ? {
+      ChromeHeadless: {
+        base: 'Chrome',
+        flags: ['--headless', '--disable-gpu', '--remote-debugging-port=0', '--no-sandbox']
+      }
+    } : {},
     client: {
       clearContext: false // leave Jasmine Spec Runner output visible in browser
     },

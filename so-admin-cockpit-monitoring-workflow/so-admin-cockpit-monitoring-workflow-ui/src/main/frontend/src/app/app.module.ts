@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -33,7 +33,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DetailsComponent } from './details/details.component';
 import { ToastrNotificationService } from './toastr-notification-service.service';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatFormFieldModule, MatInputModule, MatTableModule, MatTabsModule, MatSelectModule, MatNativeDateModule, MatDatepickerModule, MatCardModule, MatPaginatorModule, MatSortModule, MatIconModule } from '@angular/material';
+import { MatDialogModule, MatFormFieldModule, MatInputModule, MatTableModule, MatTabsModule, MatSelectModule, MatNativeDateModule, MatDatepickerModule, MatCardModule, MatPaginatorModule, MatSortModule, MatIconModule } from '@angular/material';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { RouterModule, Routes } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
@@ -56,6 +56,7 @@ import { RecipeComponent } from './recipe/recipe.component'
     HttpClientModule,
     FormsModule,
     MatTableModule,
+    MatDialogModule,
     MatTabsModule,
     BrowserAnimationsModule,
     MatSelectModule,
@@ -73,9 +74,6 @@ import { RecipeComponent } from './recipe/recipe.component'
     ReactiveFormsModule
   ],
   entryComponents: [RecipeComponent],
-  schemas: [
-    CUSTOM_ELEMENTS_SCHEMA
-  ],
   providers: [ToastrNotificationService],
   bootstrap: [AppComponent]
 })

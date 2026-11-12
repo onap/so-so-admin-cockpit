@@ -2,13 +2,24 @@
 
 The application builds with Node **10.19.0** and Yarn **1.7.0**, installed by Maven in the UI module's `target/node/`. Angular 6 and TypeScript 2.7 are retained. `yarn.lock` is the authoritative application lockfile.
 
+From this frontend directory, use the pinned runtime for Yarn and its child commands:
+
 ```sh
-yarn install --frozen-lockfile
-yarn test:ci
-yarn build
+export PATH="$PWD/../../../target/node:$PATH"
+../../../target/node/node ../../../target/node/yarn/dist/bin/yarn.js install --frozen-lockfile
+../../../target/node/node ../../../target/node/yarn/dist/bin/yarn.js test:ci
+../../../target/node/node ../../../target/node/yarn/dist/bin/yarn.js build
 ```
 
-Set `CHROME_BIN` to an installed Chrome/Chromium executable if it is not on PATH. `yarn test` runs the interactive Karma watcher; use Jasmine's `fit`/`fdescribe` temporarily for focused development and restore them before review. The CI command performs one headless run and fails for failed assertions or coverage regressions.
+Set `CHROME_BIN` to an installed Chrome/Chromium executable if it is not on PATH, for example `export CHROME_BIN=/usr/bin/chromium`. Ordinary runs retain Chrome's sandbox. An isolated CI runner that cannot initialize the sandbox can explicitly opt in for that command:
+
+```sh
+KARMA_NO_SANDBOX=true ../../../target/node/node ../../../target/node/yarn/dist/bin/yarn.js test:ci
+```
+
+Only the exact value `true` enables this launcher; use it only in an isolated runner. The same setting works with the Maven command below.
+
+`yarn test` runs the interactive Karma watcher; use Jasmine's `fit`/`fdescribe` temporarily for focused development and restore them before review. The CI command performs one headless run and fails for failed assertions or coverage regressions.
 
 Unit/component tests use real templates, Angular HTTP testing and controlled service/BPMN boundaries. They cover search filters and statistics, HTTP bodies/errors, detail navigation and viewer lifecycle, uploads, and all recipe form modes. Always flush HTTP requests; teardown verifies there are none outstanding. Await asynchronous work rather than ignoring error emissions.
 

@@ -23,7 +23,16 @@ SPDX-License-Identifier: Apache-2.0
 import { TestBed, async } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { SidebarComponent } from './sidebar/sidebar.component';
+import { TopbarComponent } from './topbar/topbar.component';
+import { ApplicationRef } from '@angular/core';
+import { AppModule } from './app.module';
+import { RecipeComponent } from './recipe/recipe.component';
+import { MatDialog } from '@angular/material';
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { BrowserAnimationsModule, NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
@@ -32,10 +41,9 @@ describe('AppComponent', () => {
         RouterTestingModule
       ],
       declarations: [
-        AppComponent
-      ],
-      schemas: [
-        CUSTOM_ELEMENTS_SCHEMA
+        AppComponent,
+        SidebarComponent,
+        TopbarComponent
       ],
     }).compileComponents();
   }));
@@ -54,4 +62,44 @@ describe('AppComponent', () => {
     const app = fixture.debugElement.componentInstance;
     expect(app.title).toEqual('SO Monitor');
   }));
+});
+
+describe('Application recipe dialog', () => {
+  let dialog: MatDialog;
+  let overlay: OverlayContainer;
+
+  beforeEach(async(() => {
+    TestBed.configureTestingModule({
+      imports: [AppModule, RouterTestingModule, HttpClientTestingModule]
+    }).overrideModule(AppModule, {
+      remove: { imports: [BrowserAnimationsModule] },
+      add: { imports: [NoopAnimationsModule] }
+    }).compileComponents();
+  }));
+
+  afterEach(() => {
+    if (dialog) { dialog.closeAll(); }
+    if (overlay) { overlay.ngOnDestroy(); }
+  });
+
+  it('opens the recipe form with its accessible dialog title', async () => {
+    dialog = TestBed.get(MatDialog);
+    overlay = TestBed.get(OverlayContainer);
+    const ref = dialog.open(RecipeComponent, {
+      data: { tab: 'Service Recipe', addNew: true, fData: {} }
+    });
+    TestBed.get(ApplicationRef).tick();
+    await Promise.resolve();
+    TestBed.get(ApplicationRef).tick();
+    const container = overlay.getContainerElement();
+    const dialogElement = container.querySelector('[role="dialog"]');
+    const title = container.querySelector('h1');
+    expect(dialogElement).not.toBeNull();
+    expect(title.id).not.toBe('');
+    expect(dialogElement.getAttribute('aria-labelledby')).toBe(title.id);
+    expect(container.textContent).toContain('Add Recipe');
+    expect(container.querySelector('input[formControlName="modelVersionId"]')).not.toBeNull();
+    ref.close();
+    await Promise.resolve();
+  });
 });

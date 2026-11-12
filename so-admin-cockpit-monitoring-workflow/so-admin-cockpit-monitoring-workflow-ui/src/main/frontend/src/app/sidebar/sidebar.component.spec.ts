@@ -23,13 +23,7 @@ SPDX-License-Identifier: Apache-2.0
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SidebarComponent } from './sidebar.component';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
-import { HttpTestingController } from '@angular/common/http/testing';
-import { HttpClient } from '@angular/common/http';
-import { inject } from '@angular/core/testing';
-import { RouterModule } from '@angular/router';
-import { APP_BASE_HREF } from '@angular/common';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('SidebarComponent', () => {
   let component: SidebarComponent;
@@ -37,12 +31,8 @@ describe('SidebarComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      providers: [SidebarComponent, HttpClient, HttpTestingController, { provide: APP_BASE_HREF, useValue: '/' }],
-      imports: [HttpClientModule, RouterModule.forRoot([])],
-      declarations: [SidebarComponent],
-      schemas: [
-        CUSTOM_ELEMENTS_SCHEMA
-      ]
+      imports: [RouterTestingModule],
+      declarations: [SidebarComponent]
     })
       .compileComponents();
   }));
@@ -53,9 +43,8 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
   });
 
-  it('component should be created', async(inject([HttpTestingController, SidebarComponent],
-    (httpClient: HttpTestingController, sideComponent: SidebarComponent) => {
-      expect(sideComponent).toBeTruthy();
-    })));
+  it('component should be created', () => {
+    expect(component).toBeTruthy();
+  });
 
 });
